@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenStock - Sistem Inventaris & Pengadaan</title>
+    <!-- PATH: Naik satu folder (dari html/) ke css/ -->
+    <link rel="stylesheet" href="../css/style.css"> 
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">
+                    <!-- Ikon Keranjang (Cart) -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </div>
+                <div class="header-title">
+                    <h1>GreenStock Inventory</h1>
+                </div>
+            </div>
+            <!-- PATH: Naik satu folder (dari html/) ke view/login.php -->
+            <a href="../view/login.php" class="btn btn-primary">Log In</a>
+        </div>
+    </header>
+    <!-- END HEADER -->
+
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="container">
+            <h1>Sistem Manajemen Inventaris & Pengadaan Toko</h1>
+            <p>
+                Kelola stok barang, pengadaan, penerimaan, dan penjualan dengan mudah dan efisien.
+                Ditenagai oleh basis data relasional yang kokoh dengan otamatisasi tingkat tinggi.
+            </p>
+            <div class="button-group">
+                <!-- PATH: Naik satu folder (dari html/) ke view/login.php -->
+                <a href="../view/login.php" class="btn btn-primary">Mulai Sekarang</a>
+                <a href="#features" class="btn btn-outline">Lihat Fitur Database</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <div class="container">
+            <h2>Kekuatan Database Anda</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>Stored Procedure</h3>
+                    <p>Automatisasi kompleks: Proses penerimaan barang dan finalisasi nilai total pengadaan otomatis.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Database Trigger</h3>
+                    <p>Pencatatan Kartu Stok (mutasi stok) otomatis setelah Penerimaan dan Penjualan.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Database Function</h3>
+                    <p>Perhitungan harga jual (termasuk margin) dan pengecekan stok terakhir secara *real-time*.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 20px;">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <path d="M22 4L12 14.01l-3-3"></path>
+                </svg>
+                <h2>Siap untuk meningkatkan efisiensi logistik Anda?</h2>
+                <p>Kelola data dengan akurat, mulai dari pengadaan hingga penjualan akhir.</p>
+                <!-- PATH: Naik satu folder (dari html/) ke view/login.php -->
+                <a href="../view/login.php" class="btn btn-primary cta-btn">
+                    Masuk ke Sistem
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Tentang GreenStock</h4>
+                    <p>Sistem ini dirancang untuk mendukung transparansi dan efisiensi dalam proses manajemen inventaris berbasis relasional.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Database PBD</h4>
+                    <ul>
+                        <li><a href="#">Dokumentasi ERD</a></li>
+                        <li><a href="#">Skema Relasional</a></li>
+                        <li><a href="#">Laporan Proyek</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 GreenStock Inventory System | Dibuat untuk Proyek Basis Data (PBD)</p>
+            </div>
+        </div>
+    </footer>
+    <!-- END FOOTER -->
+</body>
+</html>
