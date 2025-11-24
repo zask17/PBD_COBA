@@ -20,110 +20,7 @@ $can_access_full_data_master = true;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Super Admin - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
-    <style>
-        .dashboard-content header {
-            padding: 15px 0;
-        }
-
-        .dashboard-content .header-title p {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin: 0;
-        }
-
-        .dashboard-content .container {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 15px;
-        }
-
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary-green);
-            margin-bottom: 1rem;
-            border-bottom: 2px solid var(--accent-green);
-            padding-bottom: 1rem;
-        }
-
-        .sub-menu-title {
-            color: #8b92a7;
-            font-weight: 600;
-            margin-top: 40px;
-            margin-bottom: -10px;
-            font-size: 1.2rem;
-        }
-
-        .datamaster-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-            margin-top: 32px;
-        }
-
-        .dm-card {
-            background: #FFFFFF;
-            border-radius: 12px;
-            padding: 24px;
-            text-decoration: none;
-            color: var(--text-color-dark);
-            border-left: 5px solid var(--primary-green);
-            box-shadow: var(--shadow-light);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .dm-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            border-left-color: var(--accent-green);
-        }
-
-        .dm-card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-
-        .dm-card-icon {
-            font-size: 28px;
-            background: var(--background-section);
-            color: var(--primary-green);
-            padding: 12px;
-            border-radius: 10px;
-            flex-shrink: 0;
-        }
-
-        .dm-card-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-green);
-        }
-
-        .dm-card-description {
-            font-size: 0.9rem;
-            color: #555;
-            line-height: 1.5;
-        }
-
-        .header-actions span {
-            color: white;
-            font-weight: 500;
-        }
-
-        .btn-danger {
-            background-color: #D32F2F;
-            color: white;
-            border: 2px solid #D32F2F;
-        }
-
-        .btn-danger:hover {
-            background-color: #B71C1C;
-            border-color: #B71C1C;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/dashboard_super_admin.css">
 </head>
 
 <body>
@@ -133,11 +30,11 @@ $can_access_full_data_master = true;
                 <div class="header-left">
                     <div class="logo">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <path d="M16 10a4 4 0 0 1-8 0"></path>
-                    </svg>
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        </svg>
                     </div>
                     <div class="header-title">
                         <h1>Sistem Manajemen Inventory</h1>
@@ -145,15 +42,15 @@ $can_access_full_data_master = true;
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
-                    <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                   <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <span>Halo, <?php echo ucwords($username); ?>!</span>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>
 
         <div class="container">
             <h2 class="page-title">Menu Utama</h2>
-            
+
             <h3 class="sub-menu-title">Menu Transaksi</h3>
             <div class="datamaster-grid">
                 <a href="manage_pengadaan.php" class="dm-card">
@@ -174,12 +71,12 @@ $can_access_full_data_master = true;
                     </div>
                     <p class="dm-card-description">Catat transaksi penjualan barang ke pelanggan dan kurangi stok.</p>
                 </a>
-                <a href="report_kartu_stok.php" class="dm-card">
+                <!-- <a href="report_kartu_stok.php" class="dm-card">
                     <div class="dm-card-header"><span class="dm-card-icon">📋</span>
                         <h3 class="dm-card-title">Kartu Stok</h3>
                     </div>
                     <p class="dm-card-description">Lacak pergerakan dan riwayat stok (masuk, keluar, saldo) per barang.</p>
-                </a>
+                </a> -->
             </div>
 
             <h3 class="sub-menu-title">Menu Data Master</h3>
@@ -208,11 +105,11 @@ $can_access_full_data_master = true;
                     </div>
                     <p class="dm-card-description">Atur persentase margin keuntungan untuk penjualan barang.</p>
                 </a>
-                </div>
-            
+            </div>
+
             <h3 class="sub-menu-title">Menu Administrasi</h3>
             <div class="datamaster-grid">
-                 <a href="manage_users.php" class="dm-card">
+                <a href="manage_users.php" class="dm-card">
                     <div class="dm-card-header"><span class="dm-card-icon">👥</span>
                         <h3 class="dm-card-title">Manajemen User</h3>
                     </div>
@@ -228,4 +125,5 @@ $can_access_full_data_master = true;
         </div>
     </div>
 </body>
+
 </html>

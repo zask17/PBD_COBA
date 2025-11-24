@@ -25,111 +25,9 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard_super_admin.css">
 </head>
-<style>
-    .dashboard-content header {
-        padding: 15px 0;
-    }
 
-    .dashboard-content .header-title p {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin: 0;
-    }
-
-    .dashboard-content .container {
-        max-width: 1200px;
-        margin: 30px auto;
-        padding: 0 15px;
-    }
-
-    .page-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: var(--primary-green);
-        margin-bottom: 1rem;
-        border-bottom: 2px solid var(--accent-green);
-        padding-bottom: 1rem;
-    }
-
-    .sub-menu-title {
-        color: #8b92a7;
-        font-weight: 600;
-        margin-top: 40px;
-        margin-bottom: -10px;
-        font-size: 1.2rem;
-    }
-
-    .datamaster-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 24px;
-        margin-top: 32px;
-    }
-
-    .dm-card {
-        background: #FFFFFF;
-        border-radius: 12px;
-        padding: 24px;
-        text-decoration: none;
-        color: var(--text-color-dark);
-        border-left: 5px solid var(--primary-green);
-        box-shadow: var(--shadow-light);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .dm-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        border-left-color: var(--accent-green);
-    }
-
-    .dm-card-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 10px;
-    }
-
-    .dm-card-icon {
-        font-size: 28px;
-        background: var(--background-section);
-        color: var(--primary-green);
-        padding: 12px;
-        border-radius: 10px;
-        flex-shrink: 0;
-    }
-
-    .dm-card-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--primary-green);
-    }
-
-    .dm-card-description {
-        font-size: 0.9rem;
-        color: #555;
-        line-height: 1.5;
-    }
-
-    .header-actions span {
-        color: white;
-        font-weight: 500;
-    }
-
-    .btn-danger {
-        background-color: #D32F2F;
-        color: white;
-        border: 2px solid #D32F2F;
-    }
-
-    .btn-danger:hover {
-        background-color: #B71C1C;
-        border-color: #B71C1C;
-    }
-</style>
 
 <body>
     <div class="dashboard-content">
@@ -150,8 +48,8 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
-                    <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <span>Halo, <?php echo ucwords($username); ?>!</span>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>
@@ -180,12 +78,12 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
                         </div>
                         <p class="dm-card-description">Catat transaksi penjualan barang ke pelanggan dan kurangi stok.</p>
                     </a>
-                    <a href="report_kartu_stok.php" class="dm-card">
+                    <!-- <a href="report_kartu_stok.php" class="dm-card">
                         <div class="dm-card-header"><span class="dm-card-icon">📋</span>
                             <h3 class="dm-card-title">Kartu Stok</h3>
                         </div>
                         <p class="dm-card-description">Lacak pergerakan dan riwayat stok (masuk, keluar, saldo) per barang.</p>
-                    </a>
+                    </a> -->
                 </div>
             <?php endif; ?>
 
@@ -203,6 +101,10 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
 
         </div>
     </div>
+
+    <?php 
+    include 'footer.php';
+    ?>
 </body>
 
 </html>
