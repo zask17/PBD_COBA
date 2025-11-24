@@ -20,7 +20,6 @@ function checkAuth($required_role = null) {
 
     // Cek role jika ada batasan
     if ($required_role && $_SESSION['role'] !== $required_role && $_SESSION['role'] !== 'super administrator') {
-        // Jika bukan role yang diminta dan bukan super admin, redirect ke dashboard default
         header("Location: dashboard_admin.php");
         exit;
     }

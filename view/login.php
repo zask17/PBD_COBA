@@ -3,6 +3,7 @@
 
 session_start();
 // PATH: Naik satu folder (dari view/) ke model/koneksi.php
+// Asumsi: file koneksi.php mendefinisikan variabel koneksi MySQLi $dbconn
 require_once '../model/koneksi.php'; 
 
 $error = '';
@@ -22,19 +23,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
 
-    if (empty($username) || empty($password)) {
+    // Pastikan $dbconn (MySQLi object) tersedia
+    if (!isset($dbconn) || !$dbconn) {
+        $error = "Kesalahan koneksi database. Variabel \$dbconn tidak ditemukan.";
+    } elseif (empty($username) || empty($password)) {
         $error = "Username dan password wajib diisi.";
     } else {
+        // Menggunakan try-catch untuk menangani kegagalan database/prepared statement
         try {
-            // Menggunakan Prepared Statement untuk keamanan
-            $stmt = $pdo->prepare("SELECT u.iduser, u.password, r.nama_role 
+            // Query untuk mengambil data user dan rolenya
+            // Menggunakan positional placeholder (?) untuk MySQLi
+            $stmt = $dbconn->prepare("SELECT u.iduser, u.password, r.nama_role 
                                      FROM user u
                                      JOIN role r ON u.idrole = r.idrole
-                                     WHERE u.username = :username");
-            $stmt->bindParam(':username', $username);
+                                     WHERE u.username = ?"); 
+            
+            // Cek jika prepare gagal
+            if (!$stmt) {
+                 throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
+            }
+
+            // Binding parameter: 's' untuk string (username)
+            $stmt->bind_param("s", $username);
+            
+            // Eksekusi statement
             $stmt->execute();
             
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Ambil hasil
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc(); // Ambil baris sebagai array asosiatif
+            
+            // Tutup statement
+            $stmt->close();
 
             if ($user) {
                 // PENTING: Untuk project PBD awal, kita pakai perbandingan langsung.
@@ -61,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 $error = "Username tidak ditemukan.";
             }
-        } catch (PDOException $e) {
+        } catch (Exception $e) { // Menangkap Exception umum untuk error MySQLi
             $error = "Terjadi kesalahan database: " . $e->getMessage();
         }
     }
@@ -81,7 +101,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <h2>👋 Selamat Datang</h2>
         <p style="color: #555; margin-bottom: 20px;">Silakan masukkan data diri Anda.</p>
         
-        <!-- Menampilkan pesan error jika ada -->
         <?php if (!empty($error)): ?>
             <p class="error-message"><?= htmlspecialchars($error) ?></p>
         <?php endif; ?>

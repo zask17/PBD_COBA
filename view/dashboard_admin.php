@@ -137,10 +137,11 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
             <div class="header-content">
                 <div class="header-left">
                     <div class="logo">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
                         </svg>
                     </div>
                     <div class="header-title">
@@ -150,7 +151,7 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="../models/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
                 </div>
             </div>
         </header>

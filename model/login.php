@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+
 require_once 'koneksi.php'; 
 
 $error = '';
@@ -20,19 +21,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
 
-    if (empty($username) || empty($password)) {
+    // Cek koneksi $dbconn
+    if (empty($dbconn)) {
+        $error = "Kesalahan koneksi database. Silakan coba lagi.";
+    } elseif (empty($username) || empty($password)) {
         $error = "Username dan password wajib diisi.";
     } else {
+        // Blok try-catch masih berguna untuk menangani error prepare/execute
         try {
             // Query untuk mengambil data user dan rolenya
-            $stmt = $pdo->prepare("SELECT u.iduser, u.password, r.nama_role 
+            $stmt = $dbconn->prepare("SELECT u.iduser, u.password, r.nama_role 
                                      FROM user u
                                      JOIN role r ON u.idrole = r.idrole
-                                     WHERE u.username = :username");
-            $stmt->bindParam(':username', $username);
+                                     WHERE u.username = ?"); // MySQLi menggunakan positional placeholder (?)
+            
+            // Cek jika prepare gagal
+            if (!$stmt) {
+                 throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
+            }
+
+            // Binding parameter: 's' untuk string (username)
+            $stmt->bind_param("s", $username);
+            
+            // Eksekusi statement
             $stmt->execute();
             
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Ambil hasil
+            $result = $stmt->get_result();
+            $user = $result->fetch_assoc(); // Ambil baris sebagai array asosiatif
+            
+            // Tutup statement
+            $stmt->close();
 
             if ($user) {
                 // --- Verifikasi Password ---
@@ -60,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 $error = "Username tidak ditemukan.";
             }
-        } catch (PDOException $e) {
+        } catch (Exception $e) { // Tangkap Exception umum, karena PDOException tidak ada lagi
             $error = "Terjadi kesalahan database: " . $e->getMessage();
         }
     }
