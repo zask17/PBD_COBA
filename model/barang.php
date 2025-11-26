@@ -7,33 +7,66 @@ header('Content-Type: application/json; charset=utf-8');
 
 checkAuth(true); 
 
-$method = $_SERVER['REQUEST_METHOD'];
+$raw_method = $_SERVER['REQUEST_METHOD'];
+$simulated_method = $_POST['_method'] ?? null;
+$method = $raw_method;
 
-// Ambil _method dari POST untuk PUT/DELETE (Simulasi REST)
-if ($method === 'POST' && isset($_POST['_method'])) {
-    $method = strtoupper($_POST['_method']);
+// Normalisasi Metode HTTP: 
+// 1. Jika request adalah POST murni (Tambah Barang), $method tetap POST.
+// 2. Jika request adalah POST dengan _method=PUT/DELETE (Edit/Hapus), $method diubah.
+if ($raw_method === 'POST' && $simulated_method) {
+    $method = strtoupper($simulated_method);
 }
+
+// Tambahkan logging untuk debugging (Opsional, bisa dihapus setelah fix)
+// error_log("Request Method Detected: " . $method);
 
 switch ($method) {
     case 'GET':
         handleGet($dbconn);
         break;
     case 'POST':
+        // POST murni (Tambah Barang) akan masuk ke sini
         handlePost($dbconn);
         break;
     case 'PUT':
+        // POST simulasi PUT (Edit Barang)
         handlePut($dbconn);
         break;
     case 'DELETE':
+        // POST simulasi DELETE (Hapus Barang)
         handleDelete($dbconn);
         break;
     default:
+        // Ini adalah fallback yang menghasilkan error yang Anda lihat
         http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Metode tidak didukung']);
+        // Mengubah pesan error agar lebih informatif
+        echo json_encode(['success' => false, 'message' => 'Metode ' . $method . ' tidak didukung']);
         break;
 }
 
 $dbconn->close();
+
+function mapJenisBarang($jenis_text) {
+    $jenis_text = trim(strtolower($jenis_text));
+    
+    // Asumsi: frontend mengirimkan teks penuh, jadi mapping harus berdasarkan teks penuh
+    if (strpos($jenis_text, 'finished good') !== false) {
+        return 'F';
+    }
+    if (strpos($jenis_text, 'bahan baku') !== false) {
+        return 'B';
+    }
+    // Jika frontend mengirim kode satu huruf (F/B), ini juga berfungsi
+    if ($jenis_text === 'f') {
+        return 'F';
+    }
+    if ($jenis_text === 'b') {
+        return 'B';
+    }
+    return null;
+}
+
 
 function handleGet($dbconn) {
     $action = $_GET['action'] ?? null;
@@ -41,9 +74,8 @@ function handleGet($dbconn) {
 
     if ($id) {
         // --- Ambil Detail Barang (Single Item) ---
-        $id_int = intval($id); // Sanitasi
+        $id_int = intval($id);
         
-        // PENTING: Menggunakan Subquery untuk mendapatkan stok terakhir secara EFISIEN
         $sql = "SELECT 
                     b.idbarang, b.jenis, b.nama, b.idsatuan, b.status, b.harga,
                     (SELECT k.stok FROM kartu_stok k 
@@ -64,7 +96,7 @@ function handleGet($dbconn) {
                 'idsatuan' => $result['idsatuan'],
                 'jenis_barang' => $result['jenis'],
                 'harga_pokok' => $result['harga'],
-                'stok' => $result['stok_terakhir_val'] ?? 0, // Ambil dari Subquery
+                'stok' => $result['stok_terakhir_val'] ?? 0, 
                 'status' => ($result['status'] == 1) ? 'aktif' : 'tidak_aktif'
             ];
             echo json_encode(['success' => true, 'data' => $data]);
@@ -76,13 +108,10 @@ function handleGet($dbconn) {
 
     } elseif ($action === 'get_stats') {
         // --- Ambil Statistik untuk Dashboard ---
-        // PENTING: Mengganti subquery yang lambat dengan Subquery/JOIN yang lebih efisien 
-        // Menggunakan FUNCTION stok_terakhir() di SUM masih lambat, tapi dipertahankan jika FUNCTIONnya sudah diperbaiki di DB.
         $sql = "SELECT 
                     COUNT(idbarang) AS total_barang,
                     SUM(harga) AS total_nilai,
-                    -- Subquery ini masih menggunakan Function, yang bisa lambat jika tidak di cache
-                    (SELECT SUM(stok_terakhir(idbarang)) FROM barang WHERE status = 1) AS total_stok
+                    (SELECT COALESCE(SUM(stok_terakhir(idbarang)), 0) FROM barang WHERE status = 1) AS total_stok
                 FROM barang WHERE status = 1";
         $result = $dbconn->query($sql)->fetch_assoc();
         
@@ -123,11 +152,7 @@ function handleGet($dbconn) {
 
     } else {
         // --- Ambil Semua Barang untuk Tabel Utama ---
-        $filter = $_GET['filter'] ?? 'aktif'; // Default filter adalah 'aktif'
-
-        // PENTING: Implementasi Solusi C (1 Query Cepat)
-        // Menggunakan LEFT JOIN dengan Subquery untuk mendapatkan stok terakhir per barang, 
-        // menggantikan pemanggilan fungsi yang berulang di loop PHP (N+1 Problem).
+        $filter = $_GET['filter'] ?? 'aktif';
         
         $sql = "SELECT 
                     vbs.`KODE BARANG` AS idbarang, 
@@ -137,11 +162,10 @@ function handleGet($dbconn) {
                     vbs.`JENIS BARANG` AS jenis_barang_desc,
                     b.jenis AS jenis_barang_kode,
                     b.status AS status_kode,
-                    COALESCE(ks_latest.stok, 0) AS stok_terakhir_val -- Ambil stok dari JOIN, COALESCE(NULL, 0)
+                    COALESCE(ks_latest.stok, 0) AS stok_terakhir_val
                 FROM V_BARANG_SEMUA vbs
                 JOIN barang b ON vbs.`KODE BARANG` = b.idbarang
                 LEFT JOIN (
-                    -- Subquery ini menemukan idkartu_stok TERBARU untuk setiap idbarang
                     SELECT idkartu_stok, idbarang, stok
                     FROM kartu_stok 
                     WHERE (idbarang, created_at, idkartu_stok) IN (
@@ -173,7 +197,6 @@ function handleGet($dbconn) {
         $data = []; 
 
         while ($row = $result->fetch_assoc()) {
-            // TIDAK ADA QUERY TAMBAHAN di sini! Stok sudah ada di $row
             $stok = $row['stok_terakhir_val'] ?? 0;
             
             $data[] = [
@@ -194,10 +217,12 @@ function handleGet($dbconn) {
 function handlePost($dbconn) {
     $nama = $_POST['nama_barang'] ?? null;
     $idsatuan = $_POST['idsatuan'] ?? null;
-    $jenis = $_POST['jenis_barang'] ?? null; 
+    $jenis_input = $_POST['jenis_barang'] ?? null; 
     $harga = $_POST['harga_pokok'] ?? null;
     $status = (($_POST['status'] ?? '') === 'aktif') ? 1 : 0;
     $stok_awal = $_POST['stok'] ?? 0; 
+
+    $jenis = mapJenisBarang($jenis_input); 
 
     $idsatuan_int = intval($idsatuan);
     $harga_int = intval($harga);
@@ -206,7 +231,8 @@ function handlePost($dbconn) {
     
     if (empty($nama) || $idsatuan_int === 0 || empty($jenis) || $harga_int < 0) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Data input tidak lengkap atau tidak valid.']);
+        $message = 'Data input tidak lengkap atau tidak valid. Pastikan Jenis Barang dipilih dengan benar.';
+        echo json_encode(['success' => false, 'message' => $message]);
         return;
     }
 
@@ -248,9 +274,11 @@ function handlePut($dbconn) {
     $idbarang = $_POST['idbarang'] ?? null;
     $nama = $_POST['nama_barang'] ?? null;
     $idsatuan = $_POST['idsatuan'] ?? null;
-    $jenis = $_POST['jenis_barang'] ?? null; 
+    $jenis_input = $_POST['jenis_barang'] ?? null;
     $harga = $_POST['harga_pokok'] ?? null;
     $status = (($_POST['status'] ?? '') === 'aktif') ? 1 : 0;
+    
+    $jenis = mapJenisBarang($jenis_input); 
     
     $idbarang_int = intval($idbarang);
     $idsatuan_int = intval($idsatuan);
