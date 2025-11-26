@@ -5,24 +5,13 @@ require_once 'auth.php';
 // Set header untuk output JSON
 header('Content-Type: application/json; charset=utf-8');
 
-// Pastikan user sudah login
-checkAuth(); 
+checkAuth(true); 
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// _method dari POST untuk simulasi PUT/DELETE (mengikuti pola HTTP method spoofing)
+// Ambil _method dari POST untuk PUT/DELETE (Simulasi REST)
 if ($method === 'POST' && isset($_POST['_method'])) {
     $method = strtoupper($_POST['_method']);
-}
-
-// Variabel koneksi MySQLi global dari koneksi.php
-global $dbconn; 
-
-// Pastikan $dbconn adalah objek mysqli yang valid
-if (!isset($dbconn) || !$dbconn) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Koneksi database (dbconn) tidak tersedia.']);
-    exit();
 }
 
 switch ($method) {
@@ -33,13 +22,13 @@ switch ($method) {
         handlePost($dbconn);
         break;
     case 'PUT':
-        handlePut($dbconn); 
+        handlePut($dbconn);
         break;
     case 'DELETE':
         handleDelete($dbconn);
         break;
     default:
-        http_response_code(405); // Method Not Allowed
+        http_response_code(405);
         echo json_encode(['success' => false, 'message' => 'Metode tidak didukung']);
         break;
 }
@@ -50,182 +39,244 @@ function handleGet($dbconn) {
     $action = $_GET['action'] ?? null;
     $id = $_GET['id'] ?? null;
 
-    try {
-        if ($id) {
-            // Ambil satu barang untuk form edit
-            $stmt = $dbconn->prepare("SELECT idbarang, nama, idsatuan, jenis, harga, status FROM barang WHERE idbarang = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $result_data = $result->fetch_assoc();
-            $stmt->close();
-            
-            // Cek stok terbaru dari kartu_stok 
-            $stok = 0;
-            if ($result_data) {
-                $stmt_stok = $dbconn->prepare("SELECT stok FROM kartu_stok WHERE idbarang = ? ORDER BY created_at DESC, idkartu_stok DESC LIMIT 1");
-                $stmt_stok->bind_param("i", $id);
-                $stmt_stok->execute();
-                $stok_result = $stmt_stok->get_result();
-                $stok_data = $stok_result->fetch_assoc();
-                $stok = $stok_data['stok'] ?? 0;
-                $stmt_stok->close();
-            }
+    if ($id) {
+        // --- Ambil Detail Barang (Single Item) ---
+        $id_int = intval($id); // Sanitasi
+        
+        // PENTING: Menggunakan Subquery untuk mendapatkan stok terakhir secara EFISIEN
+        $sql = "SELECT 
+                    b.idbarang, b.jenis, b.nama, b.idsatuan, b.status, b.harga,
+                    (SELECT k.stok FROM kartu_stok k 
+                     WHERE k.idbarang = b.idbarang 
+                     ORDER BY k.created_at DESC, k.idkartu_stok DESC LIMIT 1) AS stok_terakhir_val
+                FROM barang b WHERE b.idbarang = ?";
 
-            // Mapping nama kolom agar sesuai dengan frontend
+        $stmt = $dbconn->prepare($sql);
+        $stmt->bind_param("i", $id_int);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result) {
             $data = [
-                'idbarang' => $result_data['idbarang'] ?? null,
-                'kode_barang' => $result_data['idbarang'] ?? null,
-                'nama_barang' => $result_data['nama'] ?? null,
-                'idsatuan' => $result_data['idsatuan'] ?? null,
-                'jenis_barang' => $result_data['jenis'] ?? null,
-                'harga_pokok' => $result_data['harga'] ?? 0,
-                'stok' => $stok, 
-                'status' => ($result_data['status'] ?? 0) == 1 ? 'aktif' : 'tidak_aktif'
+                'idbarang' => $result['idbarang'],
+                'kode_barang' => $result['idbarang'],
+                'nama_barang' => $result['nama'],
+                'idsatuan' => $result['idsatuan'],
+                'jenis_barang' => $result['jenis'],
+                'harga_pokok' => $result['harga'],
+                'stok' => $result['stok_terakhir_val'] ?? 0, // Ambil dari Subquery
+                'status' => ($result['status'] == 1) ? 'aktif' : 'tidak_aktif'
             ];
             echo json_encode(['success' => true, 'data' => $data]);
 
-        } elseif ($action === 'get_stats') {
-            // Ambil statistik untuk dashboard
-            $sql = "SELECT COUNT(idbarang) as total_barang, SUM(harga) as total_nilai FROM barang WHERE status = 1";
-            $result = $dbconn->query($sql)->fetch_assoc();
-            $result['total_stok'] = 0; // Placeholder
-            echo json_encode(['success' => true, 'data' => $result]);
-
-        } elseif ($action === 'get_satuan') {
-            // Ambil daftar satuan untuk dropdown
-            $result = $dbconn->query("SELECT idsatuan, nama_satuan FROM satuan WHERE status = 1 ORDER BY nama_satuan");
-            $data = $result->fetch_all(MYSQLI_ASSOC);
-            echo json_encode(['success' => true, 'data' => $data]);
-
         } else {
-            // Ambil semua barang untuk tabel utama dengan filter
-            $filter = $_GET['filter'] ?? 'aktif'; 
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Barang tidak ditemukan.']);
+        }
 
-            $sql = "SELECT 
-                        b.idbarang, 
-                        b.nama, 
-                        s.nama_satuan, 
-                        b.jenis, 
-                        b.harga, 
-                        b.status,
-                        COALESCE((SELECT stok FROM kartu_stok WHERE idbarang = b.idbarang ORDER BY created_at DESC, idkartu_stok DESC LIMIT 1), 0) AS stok
-                    FROM barang b
-                    LEFT JOIN satuan s ON b.idsatuan = s.idsatuan";
+    } elseif ($action === 'get_stats') {
+        // --- Ambil Statistik untuk Dashboard ---
+        // PENTING: Mengganti subquery yang lambat dengan Subquery/JOIN yang lebih efisien 
+        // Menggunakan FUNCTION stok_terakhir() di SUM masih lambat, tapi dipertahankan jika FUNCTIONnya sudah diperbaiki di DB.
+        $sql = "SELECT 
+                    COUNT(idbarang) AS total_barang,
+                    SUM(harga) AS total_nilai,
+                    -- Subquery ini masih menggunakan Function, yang bisa lambat jika tidak di cache
+                    (SELECT SUM(stok_terakhir(idbarang)) FROM barang WHERE status = 1) AS total_stok
+                FROM barang WHERE status = 1";
+        $result = $dbconn->query($sql)->fetch_assoc();
+        
+        $data = [
+            'total_barang' => $result['total_barang'] ?? 0,
+            'total_nilai' => $result['total_nilai'] ?? 0,
+            'total_stok' => $result['total_stok'] ?? 0
+        ];
 
-            $params = [];
-            $types = '';
+        echo json_encode(['success' => true, 'data' => $data]);
 
-            // Tambahkan kondisi WHERE hanya jika filter bukan 'semua'
-            if ($filter !== 'semua') {
-                $sql .= " WHERE b.status = ?";
-                $params[] = 1; 
-                $types .= 'i';
-            }
+    } elseif ($action === 'get_satuan') {
+        // --- Ambil Daftar Satuan dari V_SATUAN_AKTIF ---
+        $result = $dbconn->query("SELECT idsatuan, SATUAN AS nama_satuan FROM V_SATUAN_AKTIF ORDER BY SATUAN");
+        $data = $result->fetch_all(MYSQLI_ASSOC);
+        echo json_encode(['success' => true, 'data' => $data]);
 
-            $sql .= " ORDER BY b.idbarang ASC";
-
-            $stmt = $dbconn->prepare($sql);
-            if (!$stmt) {
-                 throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
-            }
-            
-            if (!empty($params)) {
-                // Binding untuk MySQLi (membutuhkan pass-by-reference)
-                $bind_params = array_merge([$types], $params);
-                call_user_func_array([$stmt, 'bind_param'], refValues($bind_params));
-            }
+    } elseif ($action === 'get_stock_card' && isset($_GET['idbarang'])) {
+        // --- Ambil Histori Stok (Kartu Stok) ---
+        try {
+            $idbarang = intval($_GET['idbarang']);
+            $stmt = $dbconn->prepare(
+                "SELECT idkartu_stok, created_at, jenis_transaksi, idtransaksi AS id_transaksi, masuk, keluar, stok 
+                 FROM kartu_stok 
+                 WHERE idbarang = ? 
+                 ORDER BY created_at DESC, idkartu_stok DESC"
+            );
+            $stmt->bind_param("i", $idbarang);
             $stmt->execute();
             $result = $stmt->get_result();
-            $results = $result->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
-            
-            $data = [];
-            foreach ($results as $row) {
-                // Terjemahkan kode jenis barang ke deskripsi lengkap
-                $jenis_desc = $row['jenis'];
-                switch (strtolower($row['jenis'])) {
-                    case 'm':
-                        $jenis_desc = 'Makanan / Minuman (Konsumsi)';
-                        break;
-                    case 'p':
-                        $jenis_desc = 'Perawatan Diri / Personal Care';
-                        break;
-                    case 'k':
-                        $jenis_desc = 'Kebutuhan Dapur';
-                        break;
-                    default:
-                        $jenis_desc = 'Lain-lain';
-                }
-                
-                $data[] = [
-                    'idbarang' => $row['idbarang'],
-                    'kode_barang' => $row['idbarang'],
-                    'nama_barang' => $row['nama'],
-                    'nama_satuan' => $row['nama_satuan'] ?? '-', 
-                    'jenis_barang' => $jenis_desc,
-                    'harga_pokok' => $row['harga'],
-                    'stok' => $row['stok'], 
-                    'status' => ($row['status'] ?? 0) == 1 ? 'aktif' : 'tidak_aktif'
-                ];
-            }
+            $data = $result->fetch_all(MYSQLI_ASSOC);
             echo json_encode(['success' => true, 'data' => $data]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Gagal mengambil kartu stok: ' . $e->getMessage()]);
         }
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Error database GET: ' . $e->getMessage()]);
+        return;
+
+    } else {
+        // --- Ambil Semua Barang untuk Tabel Utama ---
+        $filter = $_GET['filter'] ?? 'aktif'; // Default filter adalah 'aktif'
+
+        // PENTING: Implementasi Solusi C (1 Query Cepat)
+        // Menggunakan LEFT JOIN dengan Subquery untuk mendapatkan stok terakhir per barang, 
+        // menggantikan pemanggilan fungsi yang berulang di loop PHP (N+1 Problem).
+        
+        $sql = "SELECT 
+                    vbs.`KODE BARANG` AS idbarang, 
+                    vbs.`NAMA BARANG` AS nama_barang, 
+                    vbs.`HARGA POKOK` AS harga_pokok, 
+                    vbs.SATUAN AS nama_satuan, 
+                    vbs.`JENIS BARANG` AS jenis_barang_desc,
+                    b.jenis AS jenis_barang_kode,
+                    b.status AS status_kode,
+                    COALESCE(ks_latest.stok, 0) AS stok_terakhir_val -- Ambil stok dari JOIN, COALESCE(NULL, 0)
+                FROM V_BARANG_SEMUA vbs
+                JOIN barang b ON vbs.`KODE BARANG` = b.idbarang
+                LEFT JOIN (
+                    -- Subquery ini menemukan idkartu_stok TERBARU untuk setiap idbarang
+                    SELECT idkartu_stok, idbarang, stok
+                    FROM kartu_stok 
+                    WHERE (idbarang, created_at, idkartu_stok) IN (
+                        SELECT idbarang, MAX(created_at), MAX(idkartu_stok)
+                        FROM kartu_stok
+                        GROUP BY idbarang
+                    )
+                ) ks_latest ON b.idbarang = ks_latest.idbarang";
+
+        $params = [];
+        $types = '';
+
+        if ($filter !== 'semua') {
+            $sql .= " WHERE b.status = ?";
+            $params[] = ($filter === 'aktif') ? 1 : 0; 
+            $types .= 'i';
+        }
+
+        $sql .= " ORDER BY vbs.`KODE BARANG` ASC"; 
+
+        $stmt = $dbconn->prepare($sql);
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $data = []; 
+
+        while ($row = $result->fetch_assoc()) {
+            // TIDAK ADA QUERY TAMBAHAN di sini! Stok sudah ada di $row
+            $stok = $row['stok_terakhir_val'] ?? 0;
+            
+            $data[] = [
+                'idbarang' => $row['idbarang'],
+                'kode_barang' => $row['idbarang'],
+                'nama_barang' => $row['nama_barang'],
+                'nama_satuan' => $row['nama_satuan'] ?? '-',
+                'jenis_barang' => $row['jenis_barang_desc'],
+                'harga_pokok' => $row['harga_pokok'],
+                'stok' => $stok, 
+                'status' => ($row['status_kode'] == 1) ? 'aktif' : 'tidak_aktif'
+            ];
+        }
+        echo json_encode(['success' => true, 'data' => $data]);
     }
 }
 
 function handlePost($dbconn) {
-    // Ambil data dari form
-    $nama = $_POST['nama_barang'];
-    $idsatuan = $_POST['idsatuan'];
-    $jenis = $_POST['jenis_barang'];
-    $harga = $_POST['harga_pokok'];
-    $status = ($_POST['status'] === 'aktif') ? 1 : 0;
+    $nama = $_POST['nama_barang'] ?? null;
+    $idsatuan = $_POST['idsatuan'] ?? null;
+    $jenis = $_POST['jenis_barang'] ?? null; 
+    $harga = $_POST['harga_pokok'] ?? null;
+    $status = (($_POST['status'] ?? '') === 'aktif') ? 1 : 0;
+    $stok_awal = $_POST['stok'] ?? 0; 
+
+    $idsatuan_int = intval($idsatuan);
+    $harga_int = intval($harga);
+    $status_int = intval($status);
+    $stok_awal_int = intval($stok_awal);
     
+    if (empty($nama) || $idsatuan_int === 0 || empty($jenis) || $harga_int < 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Data input tidak lengkap atau tidak valid.']);
+        return;
+    }
+
     try {
+        $dbconn->begin_transaction(); 
+
+        // 1. INSERT ke Tabel Barang
         $stmt = $dbconn->prepare("INSERT INTO barang (nama, idsatuan, jenis, harga, status) VALUES (?, ?, ?, ?, ?)");
-        
         if (!$stmt) {
             throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
         }
-
-        // Tipe data: string, integer, string, integer (harga), integer (status)
-        $stmt->bind_param('sissi', $nama, $idsatuan, $jenis, $harga, $status);
+        $stmt->bind_param("sisii", $nama, $idsatuan_int, $jenis, $harga_int, $status_int);
         $stmt->execute();
+        
+        $new_id = $stmt->insert_id;
         $stmt->close();
 
-        echo json_encode(['success' => true, 'message' => 'Barang berhasil ditambahkan.']);
+        // 2. Tambahkan Stok Awal ke Kartu Stok (Jika Stok > 0)
+        if ($stok_awal_int > 0) {
+            $stmt_stok = $dbconn->prepare(
+                "INSERT INTO kartu_stok (idbarang, jenis_transaksi, masuk, keluar, stok, idtransaksi) 
+                 VALUES (?, 'I', ?, 0, ?, ?)" // I = Initial Stock
+            );
+            $stmt_stok->bind_param("iiii", $new_id, $stok_awal_int, $stok_awal_int, $new_id);
+            $stmt_stok->execute();
+            $stmt_stok->close();
+        }
+
+        $dbconn->commit();
+        echo json_encode(['success' => true, 'message' => 'Barang berhasil ditambahkan.', 'id' => $new_id]);
     } catch (Exception $e) {
+        $dbconn->rollback();
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Gagal menambahkan barang: ' . $e->getMessage()]);
     }
 }
 
 function handlePut($dbconn) {
-    // Ambil data dari form
-    $idbarang = $_POST['idbarang'];
-    $nama = $_POST['nama_barang'];
-    $idsatuan = $_POST['idsatuan'];
-    $jenis = $_POST['jenis_barang'];
-    $harga = $_POST['harga_pokok'];
-    $status = ($_POST['status'] === 'aktif') ? 1 : 0;
+    $idbarang = $_POST['idbarang'] ?? null;
+    $nama = $_POST['nama_barang'] ?? null;
+    $idsatuan = $_POST['idsatuan'] ?? null;
+    $jenis = $_POST['jenis_barang'] ?? null; 
+    $harga = $_POST['harga_pokok'] ?? null;
+    $status = (($_POST['status'] ?? '') === 'aktif') ? 1 : 0;
     
+    $idbarang_int = intval($idbarang);
+    $idsatuan_int = intval($idsatuan);
+    $harga_int = intval($harga);
+    $status_int = intval($status);
+    
+    if (empty($idbarang) || empty($nama) || $idsatuan_int === 0 || empty($jenis) || $harga_int < 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Data input tidak lengkap atau tidak valid.']);
+        return;
+    }
+
     try {
         $stmt = $dbconn->prepare("UPDATE barang SET nama = ?, idsatuan = ?, jenis = ?, harga = ?, status = ? WHERE idbarang = ?");
-        
         if (!$stmt) {
             throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
         }
-
-        // Tipe data: string, integer, string, integer (harga), integer (status), integer (idbarang)
-        $stmt->bind_param('sissii', $nama, $idsatuan, $jenis, $harga, $status, $idbarang);
+        $stmt->bind_param("sisiii", $nama, $idsatuan_int, $jenis, $harga_int, $status_int, $idbarang_int); 
         $stmt->execute();
-        $stmt->close();
+
+        if ($stmt->error) {
+             throw new Exception('Gagal menjalankan update: ' . $stmt->error);
+        }
 
         echo json_encode(['success' => true, 'message' => 'Barang berhasil diperbarui.']);
+
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Gagal memperbarui barang: ' . $e->getMessage()]);
@@ -233,43 +284,44 @@ function handlePut($dbconn) {
 }
 
 function handleDelete($dbconn) {
-    $idbarang = $_POST['idbarang'];
+    $idbarang = $_POST['idbarang'] ?? null;
+    
+    if (empty($idbarang)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID Barang tidak boleh kosong.']);
+        return;
+    }
+    
+    $idbarang_int = intval($idbarang);
 
-    // Menggunakan soft delete (mengubah status menjadi 0/tidak aktif)
     try {
         $stmt = $dbconn->prepare("UPDATE barang SET status = 0 WHERE idbarang = ?");
-        
         if (!$stmt) {
             throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
         }
-
-        $stmt->bind_param('i', $idbarang);
+        $stmt->bind_param("i", $idbarang_int);
         $stmt->execute();
 
-        if ($stmt->affected_rows > 0) { // Gunakan affected_rows pada MySQLi
+        if ($stmt->affected_rows > 0) {
             echo json_encode(['success' => true, 'message' => 'Barang berhasil dinonaktifkan (soft delete).']);
+
         } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Barang tidak ditemukan.']);
+            $check_stmt = $dbconn->prepare("SELECT 1 FROM barang WHERE idbarang = ?");
+            $check_stmt->bind_param("i", $idbarang_int);
+            $check_stmt->execute();
+
+            if ($check_stmt->get_result()->num_rows === 0) {
+                 http_response_code(404);
+                 echo json_encode(['success' => false, 'message' => 'Barang tidak ditemukan.']);
+                 
+            } else {
+                 echo json_encode(['success' => true, 'message' => 'Barang sudah tidak aktif.']);
+            }
+            $check_stmt->close();
         }
-        $stmt->close();
     } catch (Exception $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Gagal menonaktifkan barang: ' . $e->getMessage()]);
     }
-}
-
-/**
- * Helper function untuk menangani passing by reference yang dibutuhkan oleh mysqli::bind_param
- * Dibuat karena PHP 5.3+ memerlukan array elemen dibinding dengan referensi.
- */
-function refValues($arr){
-    if (strnatcmp(phpversion(),'5.3') >= 0) {
-        $refs = [];
-        foreach($arr as $key => $value)
-            $refs[$key] = &$arr[$key];
-        return $refs;
-    }
-    return $arr;
 }
 ?>
