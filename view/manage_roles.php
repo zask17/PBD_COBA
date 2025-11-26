@@ -11,18 +11,20 @@ checkAuth();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Role - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard_super_admin.css">
+    <link rel="stylesheet" href="../css/role.css">
 </head>
 <body>
     <div class="dashboard-content">
-        <!-- Header -->
         <header>
             <div class="header-content">
                 <div class="header-left">
                     <div class="logo">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
                         </svg>
                     </div>
                     <div class="header-title">
@@ -30,14 +32,11 @@ checkAuth();
                         <p>Manajemen Role</p>
                     </div>
                 </div>
-                <div class="header-actions" style="display: flex; gap: 1rem;">
+                <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
                     <a href="datamaster.php" class="btn btn-secondary">
                         <span>⚙️</span> Data Master
                     </a>
-                    <button id="btnTambah" class="btn btn-primary">
-                        <span>+</span> Tambah Role
-                    </button>
-                    <a href="../models/auth.php?action=logout" class="btn btn-danger">
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger">
                         <span>🚪</span> Keluar
                     </a>
                 </div>
@@ -45,12 +44,15 @@ checkAuth();
         </header>
 
         <div class="container">
-            <!-- Role Table -->
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Role</h2>
                     <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                    <button id="btnTambah" class="btn btn-primary">
+                        <span>+</span> Tambah Role
+                    </button>
                 </div>
+                
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="tableRoles">
@@ -72,13 +74,11 @@ checkAuth();
             </div>
         </div>
 
-        <!-- Footer -->
         <footer>
             <p>Sistem Manajemen Inventory PBD © 2025</p>
         </footer>
     </div>
 
-    <!-- Modal Form -->
     <div id="modalForm" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
@@ -103,22 +103,24 @@ checkAuth();
     </div>
 
     <script>
-        const API_URL = '../models/roles.php';
+        const API_URL = '../model/roles.php';
 
         document.addEventListener('DOMContentLoaded', () => {
             loadRoles();
         });
 
         async function loadRoles() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Loading...</td></tr>';
+            
             try {
                 const response = await fetch(API_URL);
                 if (response.status === 401) {
                     alert('Sesi Anda telah berakhir. Silakan login kembali.');
-                    window.location.href = '../login.html';
+                    window.location.href = '../view/login.php'; // Ganti path login ke /view/login.php
                     return;
                 }
                 const result = await response.json();
-                const tbody = document.getElementById('tableBody');
                 
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => `
@@ -136,7 +138,7 @@ checkAuth();
                 }
             } catch (error) {
                 console.error('Error loading roles:', error);
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="3" style="text-align: center;">Gagal memuat data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Gagal memuat data</td></tr>';
             }
         }
 

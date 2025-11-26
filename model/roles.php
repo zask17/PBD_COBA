@@ -1,14 +1,14 @@
 <?php
-
-require_once 'koneksi.php';
-require_once 'auth.php';
+// PERBAIKAN PATH: Menggunakan path relatif yang benar ke model dan koneksi
+require_once __DIR__ . '/koneksi.php';
+require_once __DIR__ . '/auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
-checkAuth(true); // Melindungi API, hanya untuk user yang sudah login
+// Asumsi: checkAuth() adalah fungsi yang valid dan sudah didefinisikan di auth.php
+checkAuth(true);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Ambil _method dari POST untuk simulasi PUT/DELETE
 if ($method === 'POST' && isset($_POST['_method'])) {
     $method = strtoupper($_POST['_method']);
 }
@@ -34,78 +34,120 @@ switch ($method) {
 
 $dbconn->close();
 
-function handleGet($dbconn) {
+function handleGet($dbconn)
+{
     $id = $_GET['id'] ?? null;
+    $id_int = intval($id); // Sanitasi
 
     if ($id) {
-        // Ambil satu data satuan untuk form edit
-        $stmt = $dbconn->prepare("SELECT idsatuan, nama_satuan, status FROM view_satuan WHERE idsatuan = ?");
-        $stmt->bind_param("i", $id);
+        // Ambil satu role untuk form edit (Menggunakan tabel dasar role)
+        $stmt =  $dbconn->prepare("SELECT idrole, nama_role FROM role WHERE idrole = ?");
+        $stmt->bind_param("i", $id_int);
         $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        $result['status'] = ($result['status'] ?? 0) == 1 ? 'aktif' : 'tidak_aktif';
-        echo json_encode(['success' => true, 'data' => $result]);
+        $data = $stmt->get_result()->fetch_assoc();
+        echo json_encode(['success' => true, 'data' => $data]);
     } else {
-        // Ambil semua data satuan untuk tabel
-        $result = $dbconn->query("SELECT idsatuan, nama_satuan, status FROM view_satuan ORDER BY idsatuan ASC");
-        $data = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['status_text'] = $row['status'] == 1 ? 'Aktif' : 'Tidak Aktif';
-            $data[] = $row;
+        // Ambil semua role untuk tabel (Menggunakan tabel dasar role)
+        $sql = "SELECT idrole, nama_role FROM role ORDER BY idrole ASC";
+        $result = $dbconn->query($sql);
+
+        if ($result === false) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Query gagal dieksekusi: ' . $dbconn->error]);
+            return;
         }
+
+        $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['success' => true, 'data' => $data]);
     }
 }
 
-function handlePost($dbconn) {
-    $nama_satuan = $_POST['nama_satuan'];
-    $status = ($_POST['status'] === 'aktif') ? 1 : 0;
+function handlePost($dbconn)
+{
+    $nama_role = $_POST['nama_role'] ?? null;
 
-    $stmt = $dbconn->prepare("INSERT INTO satuan (nama_satuan, status) VALUES (?, ?)");
-    $stmt->bind_param("si", $nama_satuan, $status);
+    if (empty($nama_role)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Nama role harus diisi.']);
+        return;
+    }
+
+    $stmt = $dbconn->prepare("INSERT INTO role (nama_role) VALUES (?)");
+    $stmt->bind_param("s", $nama_role);
 
     if ($stmt->execute()) {
-        echo json_encode(['success' => true, 'message' => 'Satuan berhasil ditambahkan.']);
+        echo json_encode(['success' => true, 'message' => 'Role berhasil ditambahkan.']);
     } else {
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Gagal menambahkan satuan: ' . $stmt->error]);
+        echo json_encode(['success' => false, 'message' => 'Gagal menambahkan role: ' . $stmt->error]);
     }
 }
 
-function handlePut($dbconn) {
-    $idsatuan = $_POST['idsatuan'];
-    $nama_satuan = $_POST['nama_satuan'];
-    $status = ($_POST['status'] === 'aktif') ? 1 : 0;
+function handlePut($dbconn)
+{
+    $idrole = $_POST['idrole'] ?? null;
+    $nama_role = $_POST['nama_role'] ?? null;
 
-    $stmt = $dbconn->prepare("UPDATE satuan SET nama_satuan = ?, status = ? WHERE idsatuan = ?");
-    $stmt->bind_param("sii", $nama_satuan, $status, $idsatuan);
+    $idrole_int = intval($idrole);
+
+    if (empty($idrole) || empty($nama_role)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID Role dan Nama Role harus diisi.']);
+        return;
+    }
+
+    $stmt = $dbconn->prepare("UPDATE role SET nama_role = ? WHERE idrole = ?");
+    $stmt->bind_param("si", $nama_role, $idrole_int);
 
     if ($stmt->execute()) {
-        echo json_encode(['success' => true, 'message' => 'Satuan berhasil diperbarui.']);
+        if ($stmt->affected_rows === 0 && $stmt->error) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Gagal menjalankan update: ' . $stmt->error]);
+            return;
+        }
+        echo json_encode(['success' => true, 'message' => 'Role berhasil diperbarui.']);
     } else {
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Gagal memperbarui satuan: ' . $stmt->error]);
+        echo json_encode(['success' => false, 'message' => 'Gagal memperbarui role: ' . $stmt->error]);
     }
 }
 
-function handleDelete($dbconn) {
-    $idsatuan = $_POST['idsatuan'];
+function handleDelete($dbconn)
+{
+    $idrole = $_POST['idrole'] ?? null;
+    $idrole_int = intval($idrole);
 
-    // Menggunakan soft delete (mengubah status menjadi tidak aktif)
-    $stmt = $dbconn->prepare("UPDATE satuan SET status = 0 WHERE idsatuan = ?");
-    $stmt->bind_param("i", $idsatuan);
+    if (empty($idrole)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID Role harus diisi.']);
+        return;
+    }
+
+    // Cek apakah role masih digunakan oleh user (FK check)
+    $stmt_check = $dbconn->prepare("SELECT COUNT(*) as count FROM user WHERE idrole = ?");
+    $stmt_check->bind_param("i", $idrole_int);
+    $stmt_check->execute();
+    $count = $stmt_check->get_result()->fetch_assoc()['count'];
+
+    if ($count > 0) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => "Gagal menghapus: Role ini masih digunakan oleh {$count} user."]);
+        return;
+    }
+
+    // Jika tidak digunakan, lanjutkan hapus
+    $stmt = $dbconn->prepare("DELETE FROM role WHERE idrole = ?");
+    $stmt->bind_param("i", $idrole_int);
 
     if ($stmt->execute()) {
         if ($stmt->affected_rows > 0) {
-            echo json_encode(['success' => true, 'message' => 'Satuan berhasil dinonaktifkan (soft delete).']);
+            echo json_encode(['success' => true, 'message' => 'Role berhasil dihapus.']);
         } else {
             http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Satuan tidak ditemukan.']);
+            echo json_encode(['success' => false, 'message' => 'Role tidak ditemukan.']);
         }
     } else {
-        // Jika gagal karena foreign key (meskipun soft delete jarang kena ini)
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Gagal menonaktifkan satuan: ' . $stmt->error]);
+        echo json_encode(['success' => false, 'message' => 'Gagal menghapus role: ' . $stmt->error]);
     }
 }
-?>
