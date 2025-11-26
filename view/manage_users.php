@@ -40,9 +40,6 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="datamaster.php" class="btn btn-secondary">
-                        <span>⚙️</span> Data Master
-                    </a>
                     <a href="../model/auth.php?action=logout" class="btn btn-danger">
                         <span>🚪</span> Keluar
                     </a>
