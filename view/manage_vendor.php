@@ -3,30 +3,36 @@
 require_once '../model/koneksi.php';
 require_once '../model/auth.php';
 
-checkAuth(); 
+checkAuth();
 
-// Variabel status aktif/non-aktif untuk select option
-$vendor_statuses = [1 => 'Aktif', 0 => 'Non-Aktif'];
-$badan_hukum_options = ['c' => 'Perusahaan (C)', 'p' => 'Perorangan (P)'];
+// DISESUAIKAN: Variabel status aktif/non-aktif menggunakan kode 'A' dan 'N'
+$vendor_statuses = ['A' => 'Aktif', 'N' => 'Non-Aktif']; 
+// DISESUAIKAN: Variabel badan hukum menggunakan kode 'A' dan 'T'
+$badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Hukum (CV/UD)']; 
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Vendor - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard_super_admin.css">
+    <link rel="stylesheet" href="../css/vendor.css">
 </head>
+
 <body>
     <div class="dashboard-content">
         <header>
             <div class="header-content">
                 <div class="header-left">
                     <div class="logo">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
                         </svg>
                     </div>
                     <div class="header-title">
@@ -35,13 +41,7 @@ $badan_hukum_options = ['c' => 'Perusahaan (C)', 'p' => 'Perorangan (P)'];
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem;">
-                    <a href="datamaster.php" class="btn btn-secondary">
-                        <span>⚙️</span> Data Master
-                    </a>
-                    <button id="btnTambah" class="btn btn-primary">
-                        <span>+</span> Tambah Vendor
-                    </button>
-                    <a href="../models/auth.php?action=logout" class="btn btn-danger">
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger">
                         <span>🚪</span> Keluar
                     </a>
                 </div>
@@ -64,7 +64,10 @@ $badan_hukum_options = ['c' => 'Perusahaan (C)', 'p' => 'Perorangan (P)'];
                 <div class="card-header">
                     <h2>Daftar Vendor</h2>
                     <div style="display: flex; gap: 1rem; align-items: center;">
-                        <button id="btnFilterAktif" class="btn btn-secondary btn-sm" data-filter="aktif">Tampilkan Semua</button>
+                        <button id="btnTambah" class="btn btn-primary">
+                            <span>+</span> Tambah Vendor
+                        </button>
+                        <button id="btnFilter" class="btn btn-secondary btn-sm" data-filter="aktif">Tampilkan Semua</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -89,91 +92,92 @@ $badan_hukum_options = ['c' => 'Perusahaan (C)', 'p' => 'Perorangan (P)'];
                 </div>
             </div>
 
-        <footer>
-            <p>Sistem Manajemen Inventory PBD © 2025</p>
-        </footer>
-    </div>
-
-    <div id="modalForm" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Tambah Vendor</h3>
-                <button class="close" onclick="closeModal()">&times;</button>
-            </div>
-            <form id="formVendor">
-                <input type="hidden" id="idvendor" name="idvendor">
-                <input type="hidden" id="formMethod" name="_method" value="POST">
-                
-                <div class="form-group">
-                    <label for="nama_vendor">Nama Vendor *</label>
-                    <input type="text" id="nama_vendor" name="nama_vendor" required>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="badan_hukum">Badan Hukum *</label>
-                        <select id="badan_hukum" name="badan_hukum" required>
-                            <option value="">Pilih Jenis</option>
-                            <?php foreach ($badan_hukum_options as $key => $value): ?>
-                                <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Status *</label>
-                        <select id="status" name="status" required>
-                            <?php foreach ($vendor_statuses as $key => $value): ?>
-                                <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
+            <footer>
+                <p>Sistem Manajemen Inventory PBD © 2025</p>
+            </footer>
         </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStats();
-            loadVendor();
-        });
+        <div id="modalForm" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Tambah Vendor</h3>
+                    <button class="close" onclick="closeModal()">&times;</button>
+                </div>
+                <form id="formVendor">
+                    <input type="hidden" id="idvendor" name="idvendor">
+                    <input type="hidden" id="formMethod" name="_method" value="POST">
 
-        async function loadStats() {
-            try {
-                const response = await fetch('../models/vendor.php?action=get_stats');
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('totalVendor').textContent = result.data.total_vendor || 0;
-                    document.getElementById('totalVendorAktif').textContent = result.data.total_aktif || 0;
+                    <div class="form-group">
+                        <label for="nama_vendor">Nama Vendor *</label>
+                        <input type="text" id="nama_vendor" name="nama_vendor" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="badan_hukum">Badan Hukum *</label>
+                            <select id="badan_hukum" name="badan_hukum" required>
+                                <option value="">Pilih Jenis</option>
+                                <?php foreach ($badan_hukum_options as $key => $value): ?>
+                                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status *</label>
+                            <select id="status" name="status" required>
+                                <?php foreach ($vendor_statuses as $key => $value): ?>
+                                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                loadStats();
+                loadVendor();
+            });
+
+            async function loadStats() {
+                try {
+                    const response = await fetch('../model/vendor.php?action=get_stats');
+                    const result = await response.json();
+
+                    if (result.success) {
+                        document.getElementById('totalVendor').textContent = result.data.total_vendor || 0;
+                        document.getElementById('totalVendorAktif').textContent = result.data.total_aktif || 0;
+                    }
+                } catch (error) {
+                    console.error('Error loading vendor stats:', error);
                 }
-            } catch (error) {
-                console.error('Error loading vendor stats:', error);
             }
-        }
 
-        async function loadVendor() {
-            const filter = document.getElementById('btnFilterAktif').dataset.filter;
-            const url = `../models/vendor.php?filter=${filter}`;
+            async function loadVendor() {
+                const filterButton = document.getElementById('btnFilter');
+                const filter = filterButton.dataset.filter; // 'aktif' atau 'semua'
+                const url = `../model/vendor.php?filter=${filter}`;
 
-            try {
-                const response = await fetch(url); // Hanya butuh satu fetch
-                if (response.status === 401) {
-                    alert('Sesi Anda telah berakhir. Anda akan diarahkan ke halaman login.');
-                    window.location.href = '../login.html';
-                    return;
-                }
+                try {
+                    const response = await fetch(url);
+                    if (response.status === 401) {
+                        alert('Sesi Anda telah berakhir. Anda akan diarahkan ke halaman login.');
+                        window.location.href = '../login.html';
+                        return;
+                    }
 
-                const result = await response.json();
-                const tbody = document.getElementById('tableBody');
-                
-                if (result.success && result.data.length > 0) {
-                    tbody.innerHTML = result.data.map(item => `
+                    const result = await response.json();
+                    const tbody = document.getElementById('tableBody');
+
+                    if (result.success && result.data.length > 0) {
+                        tbody.innerHTML = result.data.map(item => `
                         <tr>
                             <td>${item.idvendor}</td>
                             <td>${item.nama_vendor}</td>
@@ -184,118 +188,124 @@ $badan_hukum_options = ['c' => 'Perusahaan (C)', 'p' => 'Perorangan (P)'];
                                 <button class="btn btn-danger btn-sm" onclick="deleteVendor('${item.idvendor}', '${item.nama_vendor}')">Hapus</button>
                             </td>
                         </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada data vendor</td></tr>';
+                        `).join('');
+                    } else if (result.success && result.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada data vendor yang sesuai dengan filter.</td></tr>';
+                    } else {
+                        console.error('API Error:', result.message);
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #f5576c;">Gagal memuat data: ${result.message || 'Periksa konsol untuk detail.'}</td></tr>`;
+                    }
+                } catch (error) {
+                    console.error('Network Error loading vendors:', error);
+                    document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #f5576c;">Gagal memuat data. Periksa konsol untuk detail.</td></tr>`;
                 }
-            } catch (error) {
-                console.error('Error loading vendors:', error);
-                // Tampilkan pesan error yang lebih ramah di tabel
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #f5576c;">Gagal memuat data. Periksa konsol untuk detail.</td></tr>`;
             }
-        }
 
-        document.getElementById('btnFilterAktif').addEventListener('click', function() {
-            const currentFilter = this.dataset.filter;
-            if (currentFilter === 'aktif') {
-                this.dataset.filter = 'semua';
-                this.textContent = 'Tampilkan Semua';
-            } else {
-                this.dataset.filter = 'aktif';
-                this.textContent = 'Tampilkan Aktif Saja';
-            }
-            loadVendor();
-        });
+            document.getElementById('btnFilter').addEventListener('click', function() {
+                const currentFilter = this.dataset.filter;
 
-        document.getElementById('btnTambah').addEventListener('click', () => {
-            document.getElementById('modalTitle').textContent = 'Tambah Vendor';
-            document.getElementById('formVendor').reset();
-            document.getElementById('idvendor').value = '';
-            document.getElementById('formMethod').value = 'POST';
-            document.getElementById('modalForm').classList.add('show');
-        });
-
-        async function editVendor(id) {
-            try {
-                const response = await fetch(`../models/vendor.php?id=${id}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    const data = result.data;
-                    document.getElementById('modalTitle').textContent = 'Edit Vendor';
-                    document.getElementById('idvendor').value = data.idvendor;
-                    document.getElementById('formMethod').value = 'PUT';
-                    document.getElementById('nama_vendor').value = data.nama_vendor;
-                    document.getElementById('badan_hukum').value = data.badan_hukum;
-                    document.getElementById('status').value = data.status;
-                    
-                    document.getElementById('modalForm').classList.add('show');
+                if (currentFilter === 'aktif') {
+                    this.dataset.filter = 'semua';
+                    this.textContent = 'Tampilkan Aktif Saja'; 
+                } else { // currentFilter === 'semua'
+                    this.dataset.filter = 'aktif';
+                    this.textContent = 'Tampilkan Semua'; 
                 }
-            } catch (error) {
-                alert('Error loading data: ' + error.message);
-            }
-        }
+                loadVendor();
+            });
 
-        async function deleteVendor(id, nama) {
-            if (!confirm(`Hapus vendor "${nama}"?`)) return;
-            
-            try {
-                const formData = new FormData();
-                formData.append('_method', 'DELETE');
-                formData.append('idvendor', id);
-                
-                const response = await fetch('../models/vendor.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                alert(result.message);
-                
-                if (result.success) {
-                    loadVendor();
-                    loadStats();
+            document.getElementById('btnTambah').addEventListener('click', () => {
+                document.getElementById('modalTitle').textContent = 'Tambah Vendor';
+                document.getElementById('formVendor').reset();
+                document.getElementById('idvendor').value = '';
+                // Set default status/badan hukum saat tambah baru (opsional)
+                document.getElementById('badan_hukum').value = 'A'; 
+                document.getElementById('status').value = 'A';
+                document.getElementById('formMethod').value = 'POST';
+                document.getElementById('modalForm').classList.add('show');
+            });
+
+            async function editVendor(id) {
+                try {
+                    const response = await fetch(`../model/vendor.php?id=${id}`);
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const data = result.data;
+                        document.getElementById('modalTitle').textContent = 'Edit Vendor';
+                        document.getElementById('idvendor').value = data.idvendor;
+                        document.getElementById('formMethod').value = 'PUT';
+                        document.getElementById('nama_vendor').value = data.nama_vendor;
+                        document.getElementById('badan_hukum').value = data.badan_hukum;
+                        document.getElementById('status').value = data.status;
+
+                        document.getElementById('modalForm').classList.add('show');
+                    }
+                } catch (error) {
+                    alert('Error loading data: ' + error.message);
                 }
-            } catch (error) {
-                alert('Error: ' + error.message);
             }
-        }
 
-        document.getElementById('formVendor').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const method = formData.get('_method');
-            
-           try {
-                const response = await fetch('../models/vendor.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                alert(result.message);
-                
-                if (result.success) {
+            async function deleteVendor(id, nama) {
+                if (!confirm(`Nonaktifkan vendor "${nama}"? (Ini akan mengubah statusnya menjadi Non-Aktif/N)`)) return;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('_method', 'DELETE');
+                    formData.append('idvendor', id);
+
+                    const response = await fetch('../model/vendor.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (result.success) {
+                        loadVendor();
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+
+            document.getElementById('formVendor').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+
+                try {
+                    const response = await fetch('../model/vendor.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (result.success) {
+                        closeModal();
+                        loadVendor();
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            });
+
+            function closeModal() {
+                document.getElementById('modalForm').classList.remove('show');
+            }
+
+            window.onclick = function(event) {
+                const modal = document.getElementById('modalForm');
+                if (event.target === modal) {
                     closeModal();
-                    loadVendor();
-                    loadStats();
                 }
-           } catch (error) {
-                alert('Error: ' + error.message);
             }
-        });
-
-        function closeModal() {
-            document.getElementById('modalForm').classList.remove('show');
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalForm');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-    </script>
+        </script>
 
 </body>
+
 </html>
