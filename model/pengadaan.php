@@ -3,8 +3,8 @@
 require_once 'koneksi.php';
 require_once 'auth.php';
 
-header('Content-Type: application/json');
 
+header('Content-Type: application/json');
 checkAuth(true); // Protect the API endpoint
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -59,11 +59,14 @@ switch ($method) {
         $dbconn->begin_transaction();
         try {
             // 1. INSERT ke tabel PENGADAAN
-            // Status diatur ke 'Dipesan' agar bisa diambil oleh modul Penerimaan.
-            $sql_header = "INSERT INTO pengadaan (timestamp, user_iduser, status, vendor_idvendor, subtotal_nilai, ppn, total_nilai) 
-                           VALUES (?, ?, 'Dipesan', ?, 0, 0, 0)";
+            // Inisialisasi total dengan 0 untuk memenuhi constraint NOT NULL.
+            // SP akan menghitung ulang nilai ini. Status 'p' untuk 'pending/proses'.
+            $sql_header = "INSERT INTO pengadaan (timestamp, user_iduser, vendor_idvendor, status, subtotal_nilai, ppn, total_nilai) VALUES (?, ?, ?, 'p', ?, ?, ?)";
             $stmt_header = $dbconn->prepare($sql_header);
-            $stmt_header->bind_param("sii", $tanggal, $iduser, $idvendor);
+            $subtotal_nilai = 0;
+            $ppn = 0;
+            $total_nilai = 0;
+            $stmt_header->bind_param("siiddd", $tanggal, $iduser, $idvendor, $subtotal_nilai, $ppn, $total_nilai);
             $stmt_header->execute();
             
             $idpengadaan_baru = $dbconn->insert_id;
@@ -134,12 +137,27 @@ switch ($method) {
             }
         } else {
             // Logic to list all POs
-            $sql = "SELECT p.idpengadaan, p.timestamp as tanggal, v.nama_vendor, u.username, p.total_nilai, p.status FROM pengadaan p JOIN vendor v ON p.vendor_idvendor = v.idvendor JOIN user u ON p.user_iduser = u.iduser ORDER BY p.timestamp DESC, p.idpengadaan DESC";
+            $sql = "SELECT 
+                        p.idpengadaan, p.timestamp as tanggal, v.nama_vendor, u.username, p.total_nilai,
+                        COALESCE((SELECT SUM(dp.jumlah) FROM detail_pengadaan dp WHERE dp.idpengadaan = p.idpengadaan), 0) AS total_dipesan,
+                        COALESCE((SELECT SUM(dpr.jumlah_terima) 
+                                  FROM detail_penerimaan dpr 
+                                  JOIN penerimaan pr ON dpr.idpenerimaan = pr.idpenerimaan 
+                                  WHERE pr.idpengadaan = p.idpengadaan), 0) AS total_diterima,
+                        CASE
+                            WHEN p.status = 'c' OR COALESCE((SELECT SUM(dpr.jumlah_terima) FROM detail_penerimaan dpr JOIN penerimaan pr ON dpr.idpenerimaan = pr.idpenerimaan WHERE pr.idpengadaan = p.idpengadaan), 0) >= COALESCE((SELECT SUM(dp.jumlah) FROM detail_pengadaan dp WHERE dp.idpengadaan = p.idpengadaan), 0) THEN 'F'
+                            ELSE 'P'
+                        END AS display_status
+                    FROM pengadaan p 
+                    JOIN vendor v ON p.vendor_idvendor = v.idvendor 
+                    JOIN user u ON p.user_iduser = u.iduser 
+                    ORDER BY p.timestamp DESC, p.idpengadaan DESC";
             $result = $dbconn->query($sql);
             $data = $result->fetch_all(MYSQLI_ASSOC);
             echo json_encode(['success' => true, 'data' => $data]);
         }
         break;
+
 
     case 'DELETE':
         $data = json_decode(file_get_contents('php://input'), true);
@@ -188,7 +206,7 @@ function handleFinalize($dbconn, $data) {
     }
 
     try {
-        $stmt = $dbconn->prepare("UPDATE pengadaan SET status = 'closed' WHERE idpengadaan = ?");
+        $stmt = $dbconn->prepare("UPDATE pengadaan SET status = 'c' WHERE idpengadaan = ?");
         $stmt->bind_param("i", $idpengadaan);
         $stmt->execute();
 

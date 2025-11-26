@@ -10,7 +10,6 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +18,6 @@ $username = $_SESSION['username'] ?? 'Pengguna';
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/margin.css">
 </head>
-
 <body>
     <div class="dashboard-content">
         <header>
@@ -40,8 +38,8 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="datamaster.php" class="btn btn-secondary"><span>⚙️</span> Menu Utama</a>
-                    <a href="../models/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <!-- <a href="datamaster.php" class="btn btn-secondary"><span>⚙️</span> Menu Utama</a> -->
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
                 </div>
             </div>
         </header>
@@ -50,8 +48,8 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Margin Penjualan</h2>
-                    <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
                     <button id="btnTambah" class="btn btn-primary"><span>+</span> Tambah Margin</button>
+                    <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -68,9 +66,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
-                                <tr>
-                                    <td colspan="7" style="text-align: center;">Memuat data...</td>
-                                </tr>
+                                <tr><td colspan="7" style="text-align: center;">Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -92,21 +88,21 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             <form id="formMargin">
                 <input type="hidden" id="idmargin_penjualan" name="idmargin_penjualan">
                 <input type="hidden" id="formMethod" name="_method">
-
+                
                 <div class="form-group">
                     <label for="persen">Persentase Margin (%) *</label>
                     <input type="number" id="persen" name="persen" required step="0.01" min="0">
                 </div>
-
+                
                 <div class="form-group">
                     <label for="status">Status</label>
                     <select id="status" name="status">
                         <option value="aktif">Aktif</option>
                         <option value="tidak_aktif">Tidak Aktif</option>
                     </select>
-                    <small style="color: #8b92a7; font-size: 12px;">Hanya boleh ada satu margin yang aktif.</small>
+                     <small style="color: #8b92a7; font-size: 12px;">Hanya boleh ada satu margin yang aktif.</small>
                 </div>
-
+                
                 <div class="form-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan</button>
@@ -116,7 +112,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
     </div>
 
     <script>
-        const API_URL = '../models/margin.php'; // Pastikan path ini benar
+        const API_URL = '../model/margin.php'; // Pastikan path ini benar
 
         document.addEventListener('DOMContentLoaded', () => {
             loadMargins();
@@ -125,19 +121,19 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         async function loadMargins() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Memuat data...</td></tr>';
-
+            
             try {
                 const response = await fetch(API_URL);
-
+                
                 // Cek status otentikasi
                 if (response.status === 401) {
                     alert('Sesi Anda telah berakhir. Anda akan diarahkan ke halaman login.');
-                    window.location.href = '../view/login.php';
+                    window.location.href = '../view/login.php'; 
                     return;
                 }
-
+                
                 const result = await response.json();
-
+                
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => {
                         // Pastikan item.status adalah integer 1/0 atau string 'aktif'/'tidak_aktif'
@@ -150,7 +146,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
 
                         // Tombol Nonaktifkan hanya muncul jika status aktif
-                        const deleteButton = statusValue === 'aktif' ?
+                        const deleteButton = statusValue === 'aktif' ? 
                             `<button class="btn btn-danger btn-sm" onclick="deleteMargin('${item.idmargin_penjualan}', '${item.persen}')">Nonaktifkan</button>` : '';
 
                         return `
@@ -172,8 +168,8 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Tidak ada data margin</td></tr>';
                 }
             } catch (error) {
-                console.error('Error loading margins:', error);
-                document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align: center;">Gagal memuat data</td></tr>';
+               console.error('Error loading margins:', error);
+               document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align: center;">Gagal memuat data</td></tr>';
             }
         }
 
@@ -198,7 +194,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                     document.getElementById('formMethod').value = 'PUT';
                     document.getElementById('persen').value = data.persen;
                     // Menggunakan statusValue yang sudah di mapping (aktif/tidak_aktif)
-                    document.getElementById('status').value = statusValue;
+                    document.getElementById('status').value = statusValue; 
                     document.getElementById('modalForm').classList.add('show');
                 } else {
                     alert('Gagal memuat data untuk edit: ' + result.message);
@@ -210,16 +206,13 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
         async function deleteMargin(id, persen) {
             if (!confirm(`Yakin ingin menonaktifkan margin "${persen}%"? Margin yang aktif saat ini akan dinonaktifkan.`)) return;
-
+            
             const formData = new FormData();
             formData.append('_method', 'DELETE');
             formData.append('idmargin_penjualan', id);
-
+            
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const result = await response.json();
                 alert(result.message);
                 if (result.success) loadMargins();
@@ -232,10 +225,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             e.preventDefault();
             const formData = new FormData(e.target);
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const result = await response.json();
                 alert(result.message);
                 if (result.success) {
