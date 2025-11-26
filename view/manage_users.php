@@ -2,42 +2,48 @@
 require_once '../model/koneksi.php';
 require_once '../model/auth.php';
 
+// Memastikan user sudah login
 checkAuth();
+
+// Ambil data user untuk ditampilkan di header (opsional)
+$username = $_SESSION['username'] ?? 'Pengguna';
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen User & Role - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard_super_admin.css">
+    <link rel="stylesheet" href="../css/user.css">
 </head>
+
 <body>
     <div class="dashboard-content">
-        <!-- Header -->
         <header>
             <div class="header-content">
                 <div class="header-left">
                     <div class="logo">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <path d="M16 10a4 4 0 0 1-8 0"></path>
                         </svg>
                     </div>
                     <div class="header-title">
                         <h1>Sistem Manajemen Inventory</h1>
-                        <p>Manajemen User & Role</p>
+                        <p>Database PBD - Manajemen User & Role</p>
                     </div>
                 </div>
-                <div class="header-actions" style="display: flex; gap: 1rem;">
+                <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
+                    <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
                     <a href="datamaster.php" class="btn btn-secondary">
                         <span>⚙️</span> Data Master
                     </a>
-                    <button id="btnTambah" class="btn btn-primary">
-                        <span>+</span> Tambah User
-                    </button>
-                    <a href="../models/auth.php?action=logout" class="btn btn-danger">
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger">
                         <span>🚪</span> Keluar
                     </a>
                 </div>
@@ -45,11 +51,13 @@ checkAuth();
         </header>
 
         <div class="container">
-            <!-- User Table -->
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Pengguna</h2>
                     <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                    <button id="btnTambah" class="btn btn-primary">
+                        <span>+</span> Tambah User
+                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -73,13 +81,11 @@ checkAuth();
             </div>
         </div>
 
-        <!-- Footer -->
         <footer>
             <p>Sistem Manajemen Inventory PBD © 2025</p>
         </footer>
     </div>
 
-    <!-- Modal Form -->
     <div id="modalForm" class="modal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
@@ -89,7 +95,7 @@ checkAuth();
             <form id="formUser">
                 <input type="hidden" id="iduser" name="iduser">
                 <input type="hidden" id="formMethod" name="_method">
-                
+
                 <div class="form-group">
                     <label for="username">Username *</label>
                     <input type="text" id="username" name="username" required>
@@ -100,14 +106,14 @@ checkAuth();
                     <input type="password" id="password" name="password" placeholder="Isi untuk mengubah/menambah">
                     <small style="color: #8b92a7; font-size: 12px;">Kosongkan jika tidak ingin mengubah password saat edit.</small>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="idrole">Role *</label>
                     <select id="idrole" name="idrole" required>
                         <option value="">Pilih Role...</option>
                     </select>
                 </div>
-                
+
                 <div class="form-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan</button>
@@ -117,28 +123,37 @@ checkAuth();
     </div>
 
     <script>
+        const API_URL = '../model/users.php'; // Ganti ke path model yang benar jika perlu
+
         document.addEventListener('DOMContentLoaded', () => {
             loadUsers();
             loadRoles();
         });
 
+        function closeModal() {
+            document.getElementById('modalForm').classList.remove('show');
+            document.getElementById('formUser').reset();
+            document.getElementById('password').required = false;
+        }
+
         async function loadUsers() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
             try {
-                const response = await fetch('../models/users.php');
+                const response = await fetch(API_URL);
                 if (response.status === 401) {
                     alert('Sesi Anda telah berakhir. Silakan login kembali.');
-                    window.location.href = '../login.html';
+                    window.location.href = '../view/login.php'; // Perbaiki path jika perlu
                     return;
                 }
                 const result = await response.json();
-                const tbody = document.getElementById('tableBody');
-                
+
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => `
                         <tr>
                             <td>${item.iduser}</td>
                             <td>${item.username}</td>
-                            <td>${item.nama_role || 'N/A'}</td>
+                            <td>${item.ROLE || 'N/A'}</td>
                             <td class="action-buttons">
                                 <button class="btn btn-primary btn-sm" onclick="editUser('${item.iduser}')">Edit</button>
                                 <button class="btn btn-danger btn-sm" onclick="deleteUser('${item.iduser}', '${item.username}')">Hapus</button>
@@ -156,12 +171,12 @@ checkAuth();
 
         async function loadRoles() {
             try {
-                const response = await fetch('../models/users.php?action=get_roles');
+                const response = await fetch(API_URL + '?action=get_roles');
                 const result = await response.json();
                 if (result.success) {
                     const select = document.getElementById('idrole');
-                    select.innerHTML = '<option value="">Pilih Role...</option>' + 
-                        result.data.map(role => `<option value="${role.idrole}">${role.nama_role}</option>`).join('');
+                    select.innerHTML = '<option value="">Pilih Role...</option>' +
+                        result.data.map(role => `<option value="${role.idrole}">${role.nama_role || role.ROLE}</option>`).join('');
                 }
             } catch (error) {
                 console.error('Error loading roles:', error);
@@ -172,14 +187,14 @@ checkAuth();
             document.getElementById('modalTitle').textContent = 'Tambah User';
             document.getElementById('formUser').reset();
             document.getElementById('iduser').value = '';
-            document.getElementById('formMethod').value = '';
+            document.getElementById('formMethod').value = 'POST'; // Set method POST untuk CREATE
             document.getElementById('password').required = true; // Password wajib saat tambah
             document.getElementById('modalForm').classList.add('show');
         });
 
         async function editUser(id) {
             try {
-                const response = await fetch(`../models/users.php?id=${id}`);
+                const response = await fetch(API_URL + `?id=${id}`);
                 const result = await response.json();
                 if (result.success) {
                     const data = result.data;
@@ -188,8 +203,8 @@ checkAuth();
                     document.getElementById('formMethod').value = 'PUT';
                     document.getElementById('username').value = data.username;
                     document.getElementById('idrole').value = data.idrole;
-                    document.getElementById('password').value = ''; // Kosongkan password
-                    document.getElementById('password').required = false; // Password tidak wajib saat edit
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').required = false; // Tidak wajib saat edit
                     document.getElementById('modalForm').classList.add('show');
                 }
             } catch (error) {
@@ -199,13 +214,16 @@ checkAuth();
 
         async function deleteUser(id, nama) {
             if (!confirm(`Yakin ingin menghapus user "${nama}"? Aksi ini tidak dapat dibatalkan.`)) return;
-            
+
             const formData = new FormData();
             formData.append('_method', 'DELETE');
             formData.append('iduser', id);
-            
+
             try {
-                const response = await fetch('../models/users.php', { method: 'POST', body: formData });
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
                 const result = await response.json();
                 alert(result.message);
                 if (result.success) loadUsers();
@@ -217,15 +235,19 @@ checkAuth();
         document.getElementById('formUser').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const isEdit = formData.get('formMethod') === 'PUT';
 
-            // Validasi password saat tambah user
-            if (!formData.get('iduser') && !formData.get('password')) {
+            // Validasi password saat tambah user (atau saat edit tapi password diisi)
+            if (!isEdit && !formData.get('password')) {
                 alert('Password wajib diisi untuk user baru.');
                 return;
             }
 
             try {
-                const response = await fetch('../models/users.php', { method: 'POST', body: formData });
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
                 const result = await response.json();
                 alert(result.message);
                 if (result.success) {
@@ -237,10 +259,6 @@ checkAuth();
             }
         });
 
-        function closeModal() {
-            document.getElementById('modalForm').classList.remove('show');
-        }
-
         document.getElementById('btnRefresh').addEventListener('click', loadUsers);
 
         window.onclick = function(event) {
@@ -250,4 +268,5 @@ checkAuth();
         }
     </script>
 </body>
+
 </html>

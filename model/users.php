@@ -40,16 +40,17 @@ $dbconn->close();
 function handleGet($dbconn) {
     $action = $_GET['action'] ?? null;
     $id = $_GET['id'] ?? null;
+    $id_int = intval($id); // Sanitasi ID
 
     if ($action === 'get_roles') {
-        // Ambil daftar role untuk dropdown
+        // --- Ambil daftar role untuk dropdown ---
         $result = $dbconn->query("SELECT idrole, nama_role FROM role ORDER BY nama_role");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['success' => true, 'data' => $data]);
     } elseif ($id) {
-        // Ambil satu user untuk form edit (tanpa password)
+        // --- Ambil satu user untuk form edit (tanpa password) ---
         $stmt = $dbconn->prepare("SELECT iduser, username, idrole FROM user WHERE iduser = ?");
-        $stmt->bind_param("i", $id);
+        $stmt->bind_param("i", $id_int);
         $stmt->execute();
         $data = $stmt->get_result()->fetch_assoc();
 
@@ -60,23 +61,38 @@ function handleGet($dbconn) {
             echo json_encode(['success' => false, 'message' => 'User tidak ditemukan.']);
         }
     } else {
-        // Ambil semua user dengan nama role-nya
-        // Perbaikan: Query salah, seharusnya join tabel user dan role, bukan memanggil view di FROM
+        // --- Ambil semua user dengan nama role-nya ---
         $sql = "SELECT u.iduser, u.username, r.nama_role 
                 FROM user u
                 LEFT JOIN role r ON u.idrole = r.idrole
                 ORDER BY u.iduser ASC";
 
         $result = $dbconn->query($sql);
+        
+        if ($result === false) {
+             // Debugging jika query gagal (misalnya koneksi atau tabel error)
+             http_response_code(500);
+             echo json_encode(['success' => false, 'message' => 'Query gagal dieksekusi: ' . $dbconn->error]);
+             return;
+        }
+        
         $data = $result->fetch_all(MYSQLI_ASSOC);
-        echo json_encode(['success' => true, 'data' => $data]);
+        
+        // Mapping kolom nama_role menjadi ROLE agar konsisten dengan V_USER_ROLE jika view digunakan
+        $mapped_data = array_map(function($item) {
+            $item['ROLE'] = $item['nama_role'];
+            unset($item['nama_role']);
+            return $item;
+        }, $data);
+
+        echo json_encode(['success' => true, 'data' => $mapped_data]);
     }
 }
 
 function handlePost($dbconn) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $idrole = $_POST['idrole'];
+    $username = $_POST['username'] ?? null;
+    $password = $_POST['password'] ?? null;
+    $idrole = $_POST['idrole'] ?? null;
 
     if (empty($username) || empty($password) || empty($idrole)) {
         http_response_code(400);
@@ -84,11 +100,11 @@ function handlePost($dbconn) {
         return;
     }
 
-    // Hash password sebelum disimpan
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    $idrole_int = intval($idrole);
 
     $stmt = $dbconn->prepare("INSERT INTO user (username, password, idrole) VALUES (?, ?, ?)");
-    $stmt->bind_param("ssi", $username, $hashed_password, $idrole);
+    $stmt->bind_param("ssi", $username, $hashed_password, $idrole_int);
 
     if ($stmt->execute()) {
         echo json_encode(['success' => true, 'message' => 'User berhasil ditambahkan.']);
@@ -99,25 +115,27 @@ function handlePost($dbconn) {
 }
 
 function handlePut($dbconn) {
-    $iduser = $_POST['iduser'];
-    $username = $_POST['username'];
-    $idrole = $_POST['idrole'];
-    $password = $_POST['password'];
+    $iduser = $_POST['iduser'] ?? null;
+    $username = $_POST['username'] ?? null;
+    $idrole = $_POST['idrole'] ?? null;
+    $password = $_POST['password'] ?? null;
 
     if (empty($iduser) || empty($username) || empty($idrole)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'ID User, Username, dan Role tidak boleh kosong.']);
         return;
     }
+    
+    $iduser_int = intval($iduser);
+    $idrole_int = intval($idrole);
 
-    // Jika password diisi, update password. Jika tidak, jangan update.
     if (!empty($password)) {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $dbconn->prepare("UPDATE user SET username = ?, password = ?, idrole = ? WHERE iduser = ?");
-        $stmt->bind_param("ssii", $username, $hashed_password, $idrole, $iduser);
+        $stmt->bind_param("ssii", $username, $hashed_password, $idrole_int, $iduser_int);
     } else {
         $stmt = $dbconn->prepare("UPDATE user SET username = ?, idrole = ? WHERE iduser = ?");
-        $stmt->bind_param("sii", $username, $idrole, $iduser);
+        $stmt->bind_param("sii", $username, $idrole_int, $iduser_int);
     }
 
     if ($stmt->execute()) {
@@ -129,24 +147,25 @@ function handlePut($dbconn) {
 }
 
 function handleDelete($dbconn) {
-    $iduser = $_POST['iduser'];
+    $iduser = $_POST['iduser'] ?? null;
 
     if (empty($iduser)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'ID User tidak valid.']);
         return;
     }
+    
+    $iduser_int = intval($iduser);
 
-    // Peringatan: Ini adalah hard delete.
-    // Untuk keamanan, Anda bisa menambahkan validasi agar tidak bisa menghapus user sendiri atau admin utama.
-    if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $iduser) {
+    // Cek agar tidak menghapus user sendiri
+    if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $iduser_int) {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
         return;
     }
 
     $stmt = $dbconn->prepare("DELETE FROM user WHERE iduser = ?");
-    $stmt->bind_param("i", $iduser);
+    $stmt->bind_param("i", $iduser_int);
 
     if ($stmt->execute()) {
         if ($stmt->affected_rows > 0) {
@@ -160,4 +179,3 @@ function handleDelete($dbconn) {
         echo json_encode(['success' => false, 'message' => 'Gagal menghapus user: ' . $stmt->error]);
     }
 }
-?>
