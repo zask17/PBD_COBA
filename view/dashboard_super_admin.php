@@ -71,12 +71,12 @@ $can_access_full_data_master = true;
                     </div>
                     <p class="dm-card-description">Catat transaksi penjualan barang ke pelanggan dan kurangi stok.</p>
                 </a>
-                <!-- <a href="report_kartu_stok.php" class="dm-card">
+                <a href="report_kartu_stok.php" class="dm-card">
                     <div class="dm-card-header"><span class="dm-card-icon">📋</span>
                         <h3 class="dm-card-title">Kartu Stok</h3>
                     </div>
                     <p class="dm-card-description">Lacak pergerakan dan riwayat stok (masuk, keluar, saldo) per barang.</p>
-                </a> -->
+                </a>
             </div>
 
             <h3 class="sub-menu-title">Menu Data Master</h3>

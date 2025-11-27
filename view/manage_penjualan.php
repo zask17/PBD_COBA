@@ -176,7 +176,7 @@ async function loadMargins() {
         if (result.success) {
             const marginSelect = document.getElementById('select-margin');
             marginSelect.innerHTML = '<option value="">Pilih Margin</option>' + 
-                result.data.map(margin => `<option value="${margin.idmargin_penjualan}" data-persen="${margin.persen}" ${margin.status == 1 ? 'selected' : ''}>${margin.persen}%</option>`).join('');
+                result.data.map((margin, index) => `<option value="${margin.idmargin_penjualan}" data-persen="${margin.persen}" ${index === 0 ? 'selected' : ''}>${margin.persen}%</option>`).join('');
         }
     } catch (error) {
         console.error('Error loading margin list:', error);

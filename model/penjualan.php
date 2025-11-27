@@ -93,7 +93,7 @@ function handlePost($dbconn) {
 
     $tanggal = $input['tanggal'] ?? null;
     $items = $input['items'] ?? [];
-    $iduser = $_SESSION['user_id'];
+    $iduser = $_SESSION['user_id'] ?? null;
 
     // Memulai transaksi database
     $dbconn->begin_transaction();
