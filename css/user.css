@@ -1,4 +1,38 @@
-/* Styles untuk Card dan Table */ 
+/* CSS Umum dari Dashboard (Konsisten) */
+.dashboard-content header {
+    padding: 15px 0;
+}
+
+.dashboard-content .header-title p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.dashboard-content .container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+
+.header-actions span {
+    color: white;
+    font-weight: 500;
+}
+
+/* Tombol */
+.btn-danger {
+    background-color: #D32F2F;
+    color: white;
+    border: 2px solid #D32F2F;
+}
+
+.btn-danger:hover {
+    background-color: #B71C1C;
+    border-color: #B71C1C;
+}
+
+/* Styles untuk Card dan Table */
 .card {
     background: #FFFFFF;
     border-radius: 12px;
@@ -25,28 +59,23 @@
     padding: 0;
 }
 
-/* Table Container */
 .table-responsive {
-    width: 100%;
     overflow-x: auto;
 }
 
-/* Tabel */
-#tableRoles {
+#tableUsers {
     width: 100%;
     border-collapse: collapse;
-    table-layout: auto;
 }
 
-#tableRoles th,
-#tableRoles td {
+#tableUsers th,
+#tableUsers td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
-    font-size: 0.95rem;
 }
 
-#tableRoles thead th {
+#tableUsers thead th {
     background-color: var(--background-section, #f7f7f7);
     color: var(--text-color-dark, #333);
     font-weight: 700;
@@ -54,51 +83,8 @@
     font-size: 0.85rem;
 }
 
-#tableRoles tbody tr:hover {
+#tableUsers tbody tr:hover {
     background-color: #f9f9f9;
-}
-
-/* Kolom Aksi agar tombol sejajar */
-#tableRoles td.aksi {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-/* Jika ingin kolom aksi lebarnya tetap */
-#tableRoles th.aksi,
-#tableRoles td.aksi {
-    width: 200px; 
-}
-
-/* Tombol */
-.btn-edit {
-    background-color: #4CAF50;
-    color: white;
-    padding: 6px 14px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.btn-delete {
-    background-color: #d9534f;
-    color: white;
-    padding: 6px 14px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-/* Button Hover */
-.btn-edit:hover {
-    background-color: #43a047;
-}
-
-.btn-delete:hover {
-    background-color: #c9302c;
 }
 
 /* Modal Styles */
@@ -127,6 +113,7 @@
     border-radius: 10px;
     width: 90%;
     max-width: 500px;
+    /* Disesuaikan dengan max-width di HTML */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     animation: slideDown 0.3s ease-out;
 }
@@ -153,7 +140,7 @@
     cursor: pointer;
 }
 
-#formRole {
+#formUser {
     padding: 20px;
 }
 
@@ -170,7 +157,7 @@ label {
 }
 
 input[type="text"],
-input[type="number"],
+input[type="password"],
 select {
     width: 100%;
     padding: 10px;
@@ -189,7 +176,6 @@ select {
     margin-top: 20px;
 }
 
-/* Animasi modal */
 @keyframes slideDown {
     from {
         opacity: 0;

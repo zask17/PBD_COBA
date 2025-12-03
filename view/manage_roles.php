@@ -16,7 +16,7 @@ checkAuth();
     <title>Manajemen Role - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
-    <link rel="stylesheet" href="../css/isi.css">
+    <link rel="stylesheet" href="../css/role.css">
 </head>
 
 <body>
