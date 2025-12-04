@@ -11,36 +11,26 @@ $raw_method = $_SERVER['REQUEST_METHOD'];
 $simulated_method = $_POST['_method'] ?? null;
 $method = $raw_method;
 
-// Normalisasi Metode HTTP: 
-// 1. Jika request adalah POST murni (Tambah Barang), $method tetap POST.
-// 2. Jika request adalah POST dengan _method=PUT/DELETE (Edit/Hapus), $method diubah.
+// Normalisasi Metode HTTP untuk simulasi PUT/DELETE via POST
 if ($raw_method === 'POST' && $simulated_method) {
     $method = strtoupper($simulated_method);
 }
-
-// Tambahkan logging untuk debugging (Opsional, bisa dihapus setelah fix)
-// error_log("Request Method Detected: " . $method);
 
 switch ($method) {
     case 'GET':
         handleGet($dbconn);
         break;
     case 'POST':
-        // POST murni (Tambah Barang) akan masuk ke sini
         handlePost($dbconn);
         break;
     case 'PUT':
-        // POST simulasi PUT (Edit Barang)
         handlePut($dbconn);
         break;
     case 'DELETE':
-        // POST simulasi DELETE (Hapus Barang)
         handleDelete($dbconn);
         break;
     default:
-        // Ini adalah fallback yang menghasilkan error yang Anda lihat
         http_response_code(405);
-        // Mengubah pesan error agar lebih informatif
         echo json_encode(['success' => false, 'message' => 'Metode ' . $method . ' tidak didukung']);
         break;
 }
@@ -48,20 +38,13 @@ switch ($method) {
 $dbconn->close();
 
 function mapJenisBarang($jenis_text) {
+    // Memastikan Jenis Barang yang disimpan adalah 'J' atau 'B' sesuai DDL
     $jenis_text = trim(strtolower($jenis_text));
     
-    // Asumsi: frontend mengirimkan teks penuh, jadi mapping harus berdasarkan teks penuh
-    if (strpos($jenis_text, 'finished good') !== false) {
-        return 'F';
+    if ($jenis_text === 'j' || strpos($jenis_text, 'finished good') !== false) {
+        return 'J';
     }
-    if (strpos($jenis_text, 'bahan baku') !== false) {
-        return 'B';
-    }
-    // Jika frontend mengirim kode satu huruf (F/B), ini juga berfungsi
-    if ($jenis_text === 'f') {
-        return 'F';
-    }
-    if ($jenis_text === 'b') {
+    if ($jenis_text === 'b' || strpos($jenis_text, 'bahan baku') !== false) {
         return 'B';
     }
     return null;
@@ -73,9 +56,10 @@ function handleGet($dbconn) {
     $id = $_GET['id'] ?? null;
 
     if ($id) {
-        // --- Ambil Detail Barang (Single Item) ---
+        // --- READ: Ambil Detail Barang (Single Item) ---
         $id_int = intval($id);
         
+        // Menggunakan subkueri untuk mendapatkan stok terakhir (tanpa function)
         $sql = "SELECT 
                     b.idbarang, b.jenis, b.nama, b.idsatuan, b.status, b.harga,
                     (SELECT k.stok FROM kartu_stok k 
@@ -94,7 +78,7 @@ function handleGet($dbconn) {
                 'kode_barang' => $result['idbarang'],
                 'nama_barang' => $result['nama'],
                 'idsatuan' => $result['idsatuan'],
-                'jenis_barang' => $result['jenis'],
+                'jenis_barang' => $result['jenis'], // Mengembalikan kode J/B untuk form edit
                 'harga_pokok' => $result['harga'],
                 'stok' => $result['stok_terakhir_val'] ?? 0, 
                 'status' => ($result['status'] == 1) ? 'aktif' : 'tidak_aktif'
@@ -110,89 +94,55 @@ function handleGet($dbconn) {
         // --- Ambil Statistik untuk Dashboard ---
         $sql = "SELECT 
                     COUNT(idbarang) AS total_barang,
-                    SUM(harga) AS total_nilai,
-                    (SELECT COALESCE(SUM(stok_terakhir(idbarang)), 0) FROM barang WHERE status = 1) AS total_stok
+                    SUM(harga) AS total_nilai
                 FROM barang WHERE status = 1";
         $result = $dbconn->query($sql)->fetch_assoc();
+        
+        // Menggunakan function stok_terakhir() untuk menghitung total stok
+        $stok_result = $dbconn->query("SELECT COALESCE(SUM(stok_terakhir(idbarang)), 0) AS total_stok FROM barang WHERE status = 1");
+        $total_stok = $stok_result->fetch_assoc()['total_stok'] ?? 0;
         
         $data = [
             'total_barang' => $result['total_barang'] ?? 0,
             'total_nilai' => $result['total_nilai'] ?? 0,
-            'total_stok' => $result['total_stok'] ?? 0
+            'total_stok' => $total_stok
         ];
 
         echo json_encode(['success' => true, 'data' => $data]);
 
     } elseif ($action === 'get_satuan') {
         // --- Ambil Daftar Satuan dari V_SATUAN_AKTIF ---
-        $result = $dbconn->query("SELECT idsatuan, SATUAN AS nama_satuan FROM V_SATUAN_AKTIF ORDER BY SATUAN");
+        $result = $dbconn->query("SELECT idsatuan, SATUAN AS nama_satuan FROM V_SATUAN_AKTIF ORDER BY SATUAN ASC");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['success' => true, 'data' => $data]);
 
-    } elseif ($action === 'get_stock_card' && isset($_GET['idbarang'])) {
-        // --- Ambil Histori Stok (Kartu Stok) ---
-        try {
-            $idbarang = intval($_GET['idbarang']);
-            $stmt = $dbconn->prepare(
-                "SELECT idkartu_stok, created_at, jenis_transaksi, idtransaksi AS id_transaksi, masuk, keluar, stok 
-                 FROM kartu_stok 
-                 WHERE idbarang = ? 
-                 ORDER BY created_at DESC, idkartu_stok DESC"
-            );
-            $stmt->bind_param("i", $idbarang);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $data = $result->fetch_all(MYSQLI_ASSOC);
-            echo json_encode(['success' => true, 'data' => $data]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Gagal mengambil kartu stok: ' . $e->getMessage()]);
-        }
-        return;
-
     } else {
-        // --- Ambil Semua Barang untuk Tabel Utama ---
-        $filter = $_GET['filter'] ?? 'aktif';
+        // --- READ: Ambil Semua Barang untuk Tabel Utama (Filter) ---
+        $filter = $_GET['filter'] ?? 'aktif'; // Filter: 'aktif' atau 'semua'
         
+        // Menentukan VIEW yang akan digunakan
+        $view_name = ($filter === 'semua') ? 'V_BARANG_SEMUA' : 'V_BARANG_AKTIF';
+        
+        // Query menggunakan VIEW, JOIN ke tabel barang untuk status/jenis kode, dan function stok_terakhir()
         $sql = "SELECT 
                     vbs.`KODE BARANG` AS idbarang, 
                     vbs.`NAMA BARANG` AS nama_barang, 
                     vbs.`HARGA POKOK` AS harga_pokok, 
                     vbs.SATUAN AS nama_satuan, 
                     vbs.`JENIS BARANG` AS jenis_barang_desc,
-                    b.jenis AS jenis_barang_kode,
                     b.status AS status_kode,
-                    COALESCE(ks_latest.stok, 0) AS stok_terakhir_val
-                FROM V_BARANG_SEMUA vbs
+                    COALESCE(stok_terakhir(b.idbarang), 0) AS stok_terakhir_val
+                FROM $view_name vbs
                 JOIN barang b ON vbs.`KODE BARANG` = b.idbarang
-                LEFT JOIN (
-                    SELECT idkartu_stok, idbarang, stok
-                    FROM kartu_stok 
-                    WHERE (idbarang, created_at, idkartu_stok) IN (
-                        SELECT idbarang, MAX(created_at), MAX(idkartu_stok)
-                        FROM kartu_stok
-                        GROUP BY idbarang
-                    )
-                ) ks_latest ON b.idbarang = ks_latest.idbarang";
+                ORDER BY vbs.`KODE BARANG` ASC"; // Order by di backend
 
-        $params = [];
-        $types = '';
-
-        if ($filter !== 'semua') {
-            $sql .= " WHERE b.status = ?";
-            $params[] = ($filter === 'aktif') ? 1 : 0; 
-            $types .= 'i';
+        $result = $dbconn->query($sql);
+        
+        if ($result === false) {
+             http_response_code(500);
+             echo json_encode(['success' => false, 'message' => 'Query gagal: ' . $dbconn->error . '. Pastikan V_BARANG_SEMUA/V_BARANG_AKTIF ada.']);
+             return;
         }
-
-        $sql .= " ORDER BY vbs.`KODE BARANG` ASC"; 
-
-        $stmt = $dbconn->prepare($sql);
-
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        $stmt->execute();
-        $result = $stmt->get_result();
 
         $data = []; 
 
@@ -207,7 +157,7 @@ function handleGet($dbconn) {
                 'jenis_barang' => $row['jenis_barang_desc'],
                 'harga_pokok' => $row['harga_pokok'],
                 'stok' => $stok, 
-                'status' => ($row['status_kode'] == 1) ? 'aktif' : 'tidak_aktif'
+                'status' => ($row['status_kode'] == 1) ? 'aktif' : 'non-aktif' // FIX: Konsistensi status text
             ];
         }
         echo json_encode(['success' => true, 'data' => $data]);
@@ -215,6 +165,7 @@ function handleGet($dbconn) {
 }
 
 function handlePost($dbconn) {
+    // --- CREATE: Tambah Barang Baru ---
     $nama = $_POST['nama_barang'] ?? null;
     $idsatuan = $_POST['idsatuan'] ?? null;
     $jenis_input = $_POST['jenis_barang'] ?? null; 
@@ -244,6 +195,7 @@ function handlePost($dbconn) {
         if (!$stmt) {
             throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
         }
+        // Catatan: jenis di DDL adalah CHAR(1) ('J' atau 'B'). Perlu memastikan mapJenisBarang mengembalikan 'J' atau 'B'.
         $stmt->bind_param("sisii", $nama, $idsatuan_int, $jenis, $harga_int, $status_int);
         $stmt->execute();
         
@@ -271,6 +223,7 @@ function handlePost($dbconn) {
 }
 
 function handlePut($dbconn) {
+    // --- UPDATE: Edit Data Barang ---
     $idbarang = $_POST['idbarang'] ?? null;
     $nama = $_POST['nama_barang'] ?? null;
     $idsatuan = $_POST['idsatuan'] ?? null;
@@ -312,6 +265,7 @@ function handlePut($dbconn) {
 }
 
 function handleDelete($dbconn) {
+    // --- DELETE: Nonaktifkan Barang (Soft Delete) ---
     $idbarang = $_POST['idbarang'] ?? null;
     
     if (empty($idbarang)) {
@@ -352,4 +306,3 @@ function handleDelete($dbconn) {
         echo json_encode(['success' => false, 'message' => 'Gagal menonaktifkan barang: ' . $e->getMessage()]);
     }
 }
-?>

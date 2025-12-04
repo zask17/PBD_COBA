@@ -2,6 +2,7 @@
 require_once '../model/koneksi.php';
 require_once '../model/auth.php';
 
+// Memastikan user sudah login
 checkAuth();
 ?>
 <!DOCTYPE html>
@@ -12,19 +13,59 @@ checkAuth();
     <title>Penjualan Barang - Sistem Inventory</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
+    <link rel="stylesheet" href="../css/penjualan.css">
     <style>
-        .transaction-form .card-body { padding: 0; }
-        .form-header, .form-footer { padding: 28px; }
-        .form-header { border-bottom: 1px solid #2a3142; }
-        .form-footer { border-top: 1px solid #2a3142; }
-        #item-list-table th, #item-list-table td { padding: 16px 28px; }
-        #item-list-table input { background: #0f1419; border-color: #3a4254; padding: 8px; text-align: right; color: #e4e6eb; }
-        .total-section { text-align: right; font-size: 1.5rem; font-weight: 700; }
+        /* Gaya Sederhana untuk Modal/Popup */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h3 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .detail-info p {
+            margin: 5px 0;
+        }
+        .detail-info strong {
+            display: inline-block;
+            width: 150px;
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-content">
-        <!-- Header -->
         <header>
             <div class="header-content">
                 <div class="header-left">
@@ -42,7 +83,7 @@ checkAuth();
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem;">
-                    <a href="../models/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
                 </div>
             </div>
         </header>
@@ -50,7 +91,6 @@ checkAuth();
         <div class="container">
             <div class="card transaction-form">
                 <form id="formPenjualan">
-                    <!-- Form Header -->
                     <div class="form-header">
                         <div class="form-row">
                             <div class="form-group">
@@ -58,8 +98,12 @@ checkAuth();
                                 <input type="date" id="tanggal" name="tanggal" required>
                             </div>
                             <div class="form-group">
-                                <label for="select-margin">Margin Penjualan *</label>
-                                <select id="select-margin" required><option value="">Memuat margin...</option></select>
+                                <label for="select-margin">Margin Penjualan * (Saat Ini Aktif)</label>
+                                <select id="select-margin" required disabled>
+                                    <option value="">Memuat margin...</option>
+                                </select>
+                                <input type="hidden" id="hidden-margin-id" name="idmargin">
+                                <input type="hidden" id="hidden-margin-persen" name="persen">
                             </div>
                         </div>
                     </div>
@@ -79,7 +123,6 @@ checkAuth();
                         </div>
                     </div>
 
-                    <!-- Item List Table -->
                     <div class="table-responsive">
                         <table id="item-list-table">
                             <thead>
@@ -92,12 +135,10 @@ checkAuth();
                                 </tr>
                             </thead>
                             <tbody id="item-list-body">
-                                <!-- Items will be added here dynamically -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
 
-                    <!-- Form Footer -->
                     <div class="form-footer">
                         <div class="total-section">
                             <span>Total: </span>
@@ -110,11 +151,10 @@ checkAuth();
                 </form>
             </div>
 
-            <!-- Sales List Table -->
             <div class="card" style="margin-top: 32px;">
                 <div class="card-header">
                     <h2>Daftar Transaksi Penjualan</h2>
-                    <button id="btnRefreshList" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                    <button id="btnRefreshList" class="btn btn-secondary btn-sm">Refresh</button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -141,11 +181,38 @@ checkAuth();
         </div>
     </div>
 
+<div id="saleDetailModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" onclick="document.getElementById('saleDetailModal').style.display='none'">&times;</span>
+        <h3>Detail Transaksi Penjualan (<span id="detail-id"></span>)</h3>
+        <div class="detail-info">
+            <p><strong>Tanggal:</strong> <span id="detail-tanggal"></span></p>
+            <p><strong>Kasir:</strong> <span id="detail-kasir"></span></p>
+            <p><strong>Margin:</strong> <span id="detail-margin"></span></p>
+            <p><strong>Total:</strong> <span id="detail-total"></span></p>
+        </div>
+        <div class="table-responsive" style="margin-top: 20px;">
+            <table class="item-list-table">
+                <thead>
+                    <tr>
+                        <th>Barang</th>
+                        <th>Jml</th>
+                        <th>Harga Satuan</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody id="detail-item-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     loadMargins();
     loadBarangList();
-    loadSalesList(); // Muat daftar penjualan saat halaman dibuka
+    loadSalesList(); 
     document.getElementById('tanggal').valueAsDate = new Date();
 
     document.getElementById('btnRefreshList').addEventListener('click', loadSalesList);
@@ -155,13 +222,13 @@ const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'curren
 
 async function loadBarangList() {
     try {
-        const response = await fetch(`../models/penjualan.php?action=list_barang`);
+        // Ambil data barang yang aktif dan stok > 0
+        const response = await fetch(`../model/penjualan.php?action=list_barang`);
         const result = await response.json();
         if (result.success) {
             const barangSelect = document.getElementById('select-barang');
             barangSelect.innerHTML = '<option value="">Pilih Barang</option>' + 
                 result.data.map(item => {
-                    // Tampilkan harga dasar di dropdown
                     return `<option value='${JSON.stringify(item)}'>${item.nama} (Stok: ${item.stok}) - Base: ${formatRupiah(item.harga)}</option>`;
                 }).join('');
         }
@@ -172,12 +239,26 @@ async function loadBarangList() {
 
 async function loadMargins() {
     try {
-        const response = await fetch(`../models/penjualan.php?action=list_margins`);
+        // Ambil data margin aktif (hanya 1)
+        const response = await fetch(`../model/penjualan.php?action=list_margins`);
         const result = await response.json();
-        if (result.success) {
+        if (result.success && result.data.length > 0) {
             const marginSelect = document.getElementById('select-margin');
-            marginSelect.innerHTML = '<option value="">Pilih Margin</option>' + 
-                result.data.map((margin, index) => `<option value="${margin.idmargin_penjualan}" data-persen="${margin.persen}" ${index === 0 ? 'selected' : ''}>${margin.persen}%</option>`).join('');
+            const hiddenId = document.getElementById('hidden-margin-id');
+            const hiddenPersen = document.getElementById('hidden-margin-persen');
+            
+            // Ambil margin aktif pertama
+            const activeMargin = result.data[0];
+            
+            // Atur dropdown (disabled/read-only)
+            marginSelect.innerHTML = `<option value="${activeMargin.idmargin_penjualan}" data-persen="${activeMargin.persen}" selected>${activeMargin.persen}%</option>`;
+            
+            // Set hidden fields
+            hiddenId.value = activeMargin.idmargin_penjualan;
+            hiddenPersen.value = activeMargin.persen;
+        } else {
+            document.getElementById('select-margin').innerHTML = '<option value="">⚠️ Tidak ada margin aktif</option>';
+            alert('PERINGATAN: Tidak ada margin penjualan aktif yang ditemukan! Transaksi penjualan tidak dapat dilakukan.');
         }
     } catch (error) {
         console.error('Error loading margin list:', error);
@@ -186,7 +267,9 @@ async function loadMargins() {
 
 async function loadSalesList() {
     try {
-        const response = await fetch(`../models/penjualan.php?action=list_penjualan`);
+        document.getElementById('penjualanListBody').innerHTML = '<tr><td colspan="6" style="text-align: center;">Memuat data...</td></tr>';
+        // Ambil daftar penjualan (menggunakan VIEW/JOIN di backend)
+        const response = await fetch(`../model/penjualan.php?action=list_penjualan`);
         const result = await response.json();
         const listBody = document.getElementById('penjualanListBody');
 
@@ -202,6 +285,7 @@ async function loadSalesList() {
                         <td>${formatRupiah(sale.total_nilai)}</td>
                         <td class="action-buttons">
                             <button class="btn btn-secondary btn-sm" onclick="viewSaleDetails(${sale.idpenjualan})">Detail</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSale(${sale.idpenjualan})">Hapus</button>
                         </td>
                     </tr>
                 `;
@@ -219,30 +303,30 @@ async function loadSalesList() {
 document.getElementById('btn-tambah-barang').addEventListener('click', () => {
     const select = document.getElementById('select-barang');
     const selectedOption = select.options[select.selectedIndex];
+    const marginPersenInput = document.getElementById('hidden-margin-persen');
+    
     if (!selectedOption.value) {
         alert('Silakan pilih barang terlebih dahulu.');
         return;
     }
-    const marginSelect = document.getElementById('select-margin');
-    const selectedMarginOption = marginSelect.options[marginSelect.selectedIndex];
-    if (!selectedMarginOption.value) {
-        alert('Silakan pilih margin penjualan terlebih dahulu.');
+    if (!marginPersenInput.value) {
+        alert('Margin penjualan belum dimuat atau tidak aktif.');
         return;
     }
 
     const jumlah = document.getElementById('jumlah-barang').value;
     const item = JSON.parse(selectedOption.value);
-    const marginPersen = parseFloat(selectedMarginOption.dataset.persen);
+    const marginPersen = parseFloat(marginPersenInput.value);
 
-    // Hitung harga jual berdasarkan formula: harga_jual = harga_barang * (1 + margin_penjualan)
+    // Hitung harga jual: Harga Pokok + (Harga Pokok * Margin / 100)
     const harga_dasar = parseFloat(item.harga);
     const harga_jual = harga_dasar * (1 + (marginPersen / 100));
-    item.harga_jual = harga_jual; // Tambahkan harga jual yang sudah dihitung ke objek item
+    item.harga_jual = harga_jual; 
 
     addItem(item, jumlah);
 });
 
-function addItem(item, jumlah = 1) { // item sekarang sudah mengandung harga_jual
+function addItem(item, jumlah = 1) { 
     const itemListBody = document.getElementById('item-list-body');
     
     if (document.querySelector(`tr[data-idbarang="${item.idbarang}"]`)) {
@@ -252,6 +336,7 @@ function addItem(item, jumlah = 1) { // item sekarang sudah mengandung harga_jua
 
     const row = document.createElement('tr');
     row.setAttribute('data-idbarang', item.idbarang);
+    
     row.innerHTML = `
         <td>${item.nama}<br><small>Stok: ${item.stok} | Harga Dasar: ${formatRupiah(item.harga)}</small></td>
         <td><input type="number" class="item-qty" value="${jumlah}" min="1" max="${item.stok}" onchange="updateTotals()" onkeyup="updateTotals()"></td>
@@ -261,7 +346,6 @@ function addItem(item, jumlah = 1) { // item sekarang sudah mengandung harga_jua
     `;
     itemListBody.appendChild(row);
     
-    // Reset dropdown dan input jumlah
     document.getElementById('select-barang').selectedIndex = 0;
     document.getElementById('jumlah-barang').value = 1;
     updateTotals();
@@ -274,11 +358,14 @@ function updateTotals() {
         let qty = parseFloat(qtyInput.value) || 0;
         const maxQty = parseInt(qtyInput.max);
 
-        // Validasi agar qty tidak melebihi stok
+        // Validasi Stok
         if (qty > maxQty) {
             alert(`Stok tidak mencukupi. Stok maksimal untuk barang ini adalah ${maxQty}.`);
             qtyInput.value = maxQty;
             qty = maxQty;
+        } else if (qty < 1) {
+            qtyInput.value = 1;
+            qty = 1;
         }
 
         const price = parseFloat(row.querySelector('.item-price').dataset.price) || 0;
@@ -296,19 +383,22 @@ document.getElementById('formPenjualan').addEventListener('submit', async (e) =>
     submitButton.textContent = 'Menyimpan...';
 
     const tanggal = document.getElementById('tanggal').value;
-    const idmargin = document.getElementById('select-margin').value;
+    const idmargin = document.getElementById('hidden-margin-id').value;
     const items = [];
 
     document.querySelectorAll('#item-list-body tr').forEach(row => {
-        items.push({
-            idbarang: row.dataset.idbarang,
-            jumlah: parseFloat(row.querySelector('.item-qty').value),
-            harga_jual: parseFloat(row.querySelector('.item-price').dataset.price)
-        });
+        const qty = parseFloat(row.querySelector('.item-qty').value);
+        if (qty > 0) {
+             items.push({
+                idbarang: row.dataset.idbarang,
+                jumlah: qty,
+                harga_jual: parseFloat(row.querySelector('.item-price').dataset.price)
+            });
+        }
     });
 
     if (!tanggal || !idmargin || items.length === 0) {
-        alert('Mohon lengkapi tanggal, pilih margin, dan tambahkan minimal satu barang.');
+        alert('Mohon lengkapi tanggal, pastikan margin aktif, dan tambahkan minimal satu barang dengan jumlah > 0.');
         submitButton.disabled = false;
         submitButton.textContent = 'Simpan Transaksi Penjualan';
         return;
@@ -317,7 +407,7 @@ document.getElementById('formPenjualan').addEventListener('submit', async (e) =>
     const payload = { tanggal, idmargin, items };
 
     try {
-        const response = await fetch('../models/penjualan.php', {
+        const response = await fetch('../model/penjualan.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -332,8 +422,7 @@ document.getElementById('formPenjualan').addEventListener('submit', async (e) =>
             document.getElementById('tanggal').valueAsDate = new Date();
             document.getElementById('item-list-body').innerHTML = '';
             updateTotals();
-            loadMargins(); // Muat ulang margin
-            loadBarangList(); // Muat ulang daftar barang
+            loadBarangList(); // Muat ulang daftar barang (stok berkurang)
             loadSalesList(); // Muat ulang daftar penjualan
         }
     } catch (error) {
@@ -344,9 +433,78 @@ document.getElementById('formPenjualan').addEventListener('submit', async (e) =>
     }
 });
 
-function viewSaleDetails(id) {
-    // Fungsi ini bisa dikembangkan lebih lanjut, misalnya membuka modal dengan detail item.
-    alert(`Fungsi untuk melihat detail transaksi TX-${id} belum diimplementasikan.`);
+
+// Fungsi untuk menampilkan detail (READ)
+async function viewSaleDetails(id) {
+    try {
+        const response = await fetch(`../model/penjualan.php?action=detail_penjualan&id=${id}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const header = result.data.header;
+            const items = result.data.items;
+            const modal = document.getElementById('saleDetailModal');
+
+            // Set Header Details
+            document.getElementById('detail-id').textContent = `TX-${header.idpenjualan}`;
+            document.getElementById('detail-tanggal').textContent = new Date(header.created_at).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
+            document.getElementById('detail-kasir').textContent = header.kasir;
+            document.getElementById('detail-margin').textContent = `${header.margin_persen}%`;
+            document.getElementById('detail-total').textContent = formatRupiah(header.total_nilai);
+
+            // Set Item List
+            const itemListBody = document.getElementById('detail-item-list');
+            itemListBody.innerHTML = items.map(item => `
+                <tr>
+                    <td>${item.nama_barang} (${item.satuan})</td>
+                    <td style="text-align: center;">${item.jumlah}</td>
+                    <td>${formatRupiah(item.harga_satuan)}</td>
+                    <td>${formatRupiah(item.subtotal)}</td>
+                </tr>
+            `).join('');
+
+            modal.style.display = 'block';
+
+        } else {
+            alert('Gagal memuat detail: ' + result.message);
+        }
+
+    } catch (error) {
+        alert('Terjadi kesalahan saat mengambil detail: ' + error.message);
+    }
+}
+
+
+// Fungsi untuk menghapus/membatalkan transaksi (DELETE)
+async function deleteSale(id) {
+    if (!confirm(`Yakin ingin membatalkan transaksi TX-${id}? Aksi ini akan mengembalikan stok barang.`)) {
+        return;
+    }
+
+    try {
+        // Menggunakan method DELETE
+        const response = await fetch(`../model/penjualan.php?id=${id}`, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+        alert(result.message);
+
+        if (result.success) {
+            loadSalesList(); // Muat ulang daftar penjualan
+            loadBarangList(); // Muat ulang daftar barang (stok sudah bertambah)
+        }
+    } catch (error) {
+        alert('Terjadi kesalahan saat membatalkan transaksi: ' + error.message);
+    }
+}
+
+// Menutup modal jika user klik di luar modal
+window.onclick = function(event) {
+    const modal = document.getElementById('saleDetailModal');
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
 }
 </script>
 

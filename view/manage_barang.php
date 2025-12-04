@@ -41,7 +41,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
                 </div>
             </div>
         </header>
@@ -66,7 +66,9 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 <div class="card-header">
                     <h2>Daftar Barang</h2>
                     <div style="display: flex; gap: 1rem; align-items: center;">
-                        <button id="btnFilterAktif" class="btn btn-secondary btn-sm" data-filter="aktif">Tampilkan Semua</button>
+                        <button id="btnFilterAktif" class="btn btn-success btn-sm active-filter" data-filter="aktif">Barang Aktif</button>
+                        <button id="btnFilterSemua" class="btn btn-info btn-sm" data-filter="semua">Semua Barang</button>
+                        
                         <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
                         <button id="btnTambah" class="btn btn-primary btn-sm">
                             <span>+</span> Tambah Barang
@@ -99,7 +101,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             </div>
 
             <footer>
-                <p>Sistem Manajemen Inventory PBD © 2025</p>
+                <p>Sistem Manajemen Inventory PBD &copy; 2025</p>
             </footer>
         </div>
 
@@ -135,7 +137,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                             <label for="jenis_barang">Jenis Barang</label>
                             <select id="jenis_barang" name="jenis_barang">
                                 <option value="">Pilih Jenis</option>
-                                <option value="F">Finished Good (Barang Jadi)</option>
+                                <option value="J">Finished Good (Barang Jadi)</option>
                                 <option value="B">Bahan Baku (Raw Material)</option>
                             </select>
                         </div>
@@ -147,7 +149,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                             <input type="number" id="harga_pokok" name="harga_pokok" required step="0.01">
                         </div>
                         <div class="form-group">
-                            <label for="stok">Stok Awal *</label>
+                            <label for="stok">Stok Awal (Hanya untuk Tambah) *</label>
                             <input type="number" id="stok" name="stok" required>
                         </div>
                     </div>
@@ -169,17 +171,21 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         </div>
 
         <script>
-            // Load data on page load
+            // Variabel untuk menyimpan filter aktif saat ini
+            let currentFilter = 'aktif';
+
             document.addEventListener('DOMContentLoaded', () => {
                 loadStats();
                 loadBarang();
                 loadSatuan();
+                // Set kelas aktif default
+                document.getElementById('btnFilterAktif').classList.add('active');
             });
 
-            // Load statistics
+            // --- FUNGSI UTAMA ---
+
             async function loadStats() {
                 try {
-                    // Panggil API di model/barang.php
                     const response = await fetch('../model/barang.php?action=get_stats');
                     const result = await response.json();
 
@@ -193,15 +199,11 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 }
             }
 
-            // Load barang list
             async function loadBarang() {
-                const filter = document.getElementById('btnFilterAktif').dataset.filter;
-                const url = `../model/barang.php?filter=${filter}`;
+                const url = `../model/barang.php?filter=${currentFilter}`;
 
                 try {
                     const response = await fetch(url);
-
-                    // Menangani error otentikasi (sesi berakhir)
                     if (response.status === 401) {
                         alert('Sesi Anda telah berakhir. Anda akan diarahkan ke halaman login.');
                         window.location.href = '../view/login.php';
@@ -209,7 +211,6 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                     }
 
                     const result = await response.json();
-
                     const tbody = document.getElementById('tableBody');
 
                     if (result.success && result.data.length > 0) {
@@ -233,23 +234,10 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                     }
                 } catch (error) {
                     console.error('Error loading barang:', error);
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Gagal memuat data barang.</td></tr>';
                 }
             }
-
-            // Toggle filter button
-            document.getElementById('btnFilterAktif').addEventListener('click', function() {
-                const currentFilter = this.dataset.filter;
-                if (currentFilter === 'semua') {
-                    this.dataset.filter = 'aktif';
-                    this.textContent = 'Tampilkan Semua';
-                } else {
-                    this.dataset.filter = 'semua';
-                    this.textContent = 'Tampilkan Aktif Saja';
-                }
-                loadBarang();
-            });
-
-            // Load satuan for dropdown
+            
             async function loadSatuan() {
                 try {
                     const response = await fetch('../model/barang.php?action=get_satuan');
@@ -265,18 +253,37 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 }
             }
 
-            // Show modal for add
+            // --- FILTER LOGIC ---
+            function setFilter(filter) {
+                currentFilter = filter;
+                document.getElementById('btnFilterAktif').classList.remove('active');
+                document.getElementById('btnFilterSemua').classList.remove('active');
+                
+                if (filter === 'aktif') {
+                    document.getElementById('btnFilterAktif').classList.add('active');
+                } else {
+                    document.getElementById('btnFilterSemua').classList.add('active');
+                }
+                loadBarang();
+            }
+
+            document.getElementById('btnFilterAktif').addEventListener('click', () => setFilter('aktif'));
+            document.getElementById('btnFilterSemua').addEventListener('click', () => setFilter('semua'));
+
+
+            // --- CRUD LOGIC ---
+
             document.getElementById('btnTambah').addEventListener('click', () => {
                 document.getElementById('modalTitle').textContent = 'Tambah Barang';
                 document.getElementById('formBarang').reset();
                 document.getElementById('idbarang').value = '';
                 document.getElementById('formMethod').value = '';
-                document.getElementById('kodeBarangDisplay').style.display = 'none'; // Sembunyikan kode barang saat tambah
-                document.getElementById('stok').readOnly = false; // Stok bisa diisi saat tambah
+                document.getElementById('kodeBarangDisplay').style.display = 'none'; 
+                document.getElementById('stok').readOnly = false; 
+                document.getElementById('stok').required = true;
                 document.getElementById('modalForm').classList.add('show');
             });
 
-            // Edit barang
             async function editBarang(id) {
                 try {
                     const response = await fetch(`../model/barang.php?id=${id}`);
@@ -290,13 +297,14 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                         document.getElementById('kode_barang').value = data.kode_barang;
                         document.getElementById('nama_barang').value = data.nama_barang;
                         document.getElementById('idsatuan').value = data.idsatuan;
-                        document.getElementById('jenis_barang').value = data.jenis_barang;
+                        document.getElementById('jenis_barang').value = data.jenis_barang; // Menggunakan kode J/B
                         document.getElementById('harga_pokok').value = data.harga_pokok;
                         document.getElementById('stok').value = data.stok || 0;
-                        document.getElementById('stok').readOnly = true; // Stok tidak bisa diedit di master data
+                        document.getElementById('stok').readOnly = true; 
+                        document.getElementById('stok').required = false;
                         document.getElementById('status').value = data.status;
 
-                        document.getElementById('kodeBarangDisplay').style.display = 'block'; // Tampilkan kode barang saat edit
+                        document.getElementById('kodeBarangDisplay').style.display = 'block'; 
                         document.getElementById('modalForm').classList.add('show');
                     }
                 } catch (error) {
@@ -304,7 +312,6 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 }
             }
 
-            // Delete barang (Soft Delete)
             async function deleteBarang(id, nama) {
                 if (!confirm(`Apakah Anda yakin ingin MENONAKTIFKAN barang "${nama}"? (Soft Delete)`)) return;
 
@@ -330,11 +337,23 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 }
             }
 
-            // Submit form (Add or Edit)
             document.getElementById('formBarang').addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const formData = new FormData(e.target);
+
+                // Hapus stok dari formData jika sedang PUT (Edit)
+                if (document.getElementById('formMethod').value === 'PUT') {
+                    formData.delete('stok'); 
+                }
+
+                // FIX: Pastikan jenis_barang dikirim sebagai kode J/B
+                const selectedJenis = document.getElementById('jenis_barang').value;
+                if (selectedJenis === 'F') { // Handle typo "F" menjadi "J" jika frontend menggunakan F
+                    formData.set('jenis_barang', 'J');
+                } else if (selectedJenis === 'B') {
+                    formData.set('jenis_barang', 'B');
+                }
 
                 try {
                     const response = await fetch('../model/barang.php', {
@@ -355,19 +374,17 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 }
             });
 
-            // Close modal
+            // --- MODAL & REFRESH ---
+
             function closeModal() {
                 document.getElementById('modalForm').classList.remove('show');
             }
 
-            // Refresh button
             document.getElementById('btnRefresh').addEventListener('click', () => {
-                // Memanggil kedua fungsi untuk memuat ulang data statistik dan tabel barang
                 loadBarang();
                 loadStats();
             });
 
-            // Close modal when clicking outside
             window.onclick = function(event) {
                 const modal = document.getElementById('modalForm');
                 if (event.target === modal) {
