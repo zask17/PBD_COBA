@@ -83,7 +83,7 @@ function getAllPengadaan() {
                     ELSE p.display_status
                 END AS display_status
             FROM V_PENGADAAN p
-            ORDER BY p.tanggal DESC, p.idpengadaan DESC"; // Order by di backend
+            ORDER BY p.tanggal DESC, p.idpengadaan DESC";
             
     $result = $dbconn->query($sql);
     $data = $result->fetch_all(MYSQLI_ASSOC);
