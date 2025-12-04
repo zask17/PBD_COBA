@@ -1,0 +1,143 @@
+
+/* Tombol */
+.btn-danger {
+    background-color: #D32F2F;
+    color: white;
+    border: 2px solid #D32F2F;
+}
+
+.btn-danger:hover {
+    background-color: #B71C1C;
+    border-color: #B71C1C;
+}
+
+/* Styles untuk Card dan Table */
+.card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.card-header h2 {
+    font-size: 1.5rem;
+    color: var(--primary-green, #4CAF50);
+    margin: 0;
+}
+
+.card-body {
+    padding: 0;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+#tableBarang,
+#tableKartuStok {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#tableBarang th,
+#tableBarang td,
+#tableKartuStok th,
+#tableKartuStok td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+#tableBarang thead th,
+#tableKartuStok thead th {
+    background-color: var(--background-section, #f7f7f7);
+    color: var(--text-color-dark, #333);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+#tableBarang tbody tr:hover,
+#tableKartuStok tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Text Colors untuk kolom Masuk/Keluar di Kartu Stok */
+.text-success {
+    color: #4CAF50; /* Hijau */
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #F44336; /* Merah */
+    font-weight: 600;
+}
+
+/* Styles Modal (diambil dari role.css/barang.css) */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border-radius: 10px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease-out;
+}
+
+.modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--primary-green, #4CAF50);
+}
+
+.modal-header .close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}

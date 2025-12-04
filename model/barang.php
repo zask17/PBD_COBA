@@ -352,4 +352,6 @@ function handleDelete($dbconn) {
         echo json_encode(['success' => false, 'message' => 'Gagal menonaktifkan barang: ' . $e->getMessage()]);
     }
 }
+
+
 ?>
