@@ -16,59 +16,6 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/pengadaan.css">
-    
-    <style>
-        /* Variabel diambil dari style.css/pengadaan.css */
-        :root {
-            --primary-green: #1A5319;
-            --secondary-color: #689F38; /* Ditambahkan untuk konsistensi */
-            --accent-green: #689F38;
-            --background-section: #E8F5E9;
-            --text-color-dark: #333333;
-        }
-
-        /* Layout Umum Form */
-        .card.transaction-form {
-            padding: 0;
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-        .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
-        .form-group { flex: 1; display: flex; flex-direction: column; }
-        .form-group label { margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: var(--primary-green); }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-        
-        /* Header/Footer Form */
-        .form-header, .form-footer { padding: 20px; }
-        .form-header { border-bottom: 1px solid #ddd; }
-        .form-footer { border-top: 1px solid #ddd; }
-        .form-footer > div:last-child { display: flex; gap: 1rem; padding-top: 20px; border-top: none; }
-
-        /* Tabel Detail Item */
-        #item-list-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        #item-list-table th, #item-list-table td { padding: 12px 20px; border-bottom: 1px solid #eee; }
-        #item-list-table th { background-color: var(--background-section); color: var(--text-color-dark); font-size: 0.9em; text-align: center; }
-        #item-list-table td { text-align: center; }
-        #item-list-table td:first-child { text-align: left; } /* Nama barang di kiri */
-        #item-list-table input { text-align: center; }
-
-        /* Total Section */
-        .total-section { text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary-green); padding: 10px 0; }
-        
-        /* Button Styles */
-        .btn-sm { padding: 5px 8px; font-size: 0.8em; }
-        .btn-danger { background-color: #dc3545; color: white; border: none; }
-        .btn-secondary { background-color: #6c757d; color: white; border: none; }
-        .btn-primary { background-color: var(--primary-green); color: white; border: none; }
-        .btn-success { background-color: var(--accent-green); color: white; border: none; }
-        
-        /* Badge Styles */
-        .badge { padding: 5px 10px; border-radius: 4px; font-weight: 700; font-size: 0.8em; display: inline-block; }
-        .badge-warning { background: rgba(255, 193, 7, 0.15); color: #ffc107; } 
-        .badge-info { background: rgba(0, 123, 255, 0.15); color: #007bff; } 
-        .badge-success { background: rgba(40, 167, 69, 0.15); color: #28a745; }
-        .badge-secondary { background: rgba(108, 117, 125, 0.15); color: #6c757d; }
-    </style>
 </head>
 <body>
     <div class="dashboard-content">
@@ -103,7 +50,7 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
                     <input type="hidden" id="idpengadaan" name="idpengadaan">
                     
                     <div class="form-header">
-                        <h2 style="margin-bottom: 10px; color: var(--primary-green);">Input Penerimaan Barang</h2>
+                        <h2 style="margin-bottom: 20px;">Input Penerimaan Barang</h2>
                         
                         <div class="form-group" style="flex: 1; margin-bottom: 10px;">
                             <label for="select-po">Pilih Pengadaan (PO) untuk Diterima</label>
@@ -134,16 +81,16 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
                             <thead>
                                 <tr>
                                     <th>Nama Barang (ID)</th>
-                                    <th width="15%">Jml. Dipesan</th>
-                                    <th width="15%">Total Sudah Terima</th>
-                                    <th width="15%">Sisa Belum Terima</th>
-                                    <th width="15%">Jml. Diterima Saat Ini</th>
-                                    <th width="20%">Harga Satuan PO</th>
-                                    <th width="20%">Subtotal Terima</th>
+                                    <th width="15%" style="text-align: center;">Jml. Dipesan</th>
+                                    <th width="15%" style="text-align: center;">Total Sudah Terima</th>
+                                    <th width="15%" style="text-align: center;">Sisa Belum Terima</th>
+                                    <th width="15%" style="text-align: center;">Jml. Diterima Saat Ini</th>
+                                    <th width="20%" style="text-align: right;">Harga Satuan PO</th>
+                                    <th width="20%" style="text-align: right;">Subtotal Terima</th>
                                 </tr>
                             </thead>
                             <tbody id="item-list-body">
-                                <tr><td colspan="7" class="text-center">Silakan pilih PO untuk melihat item.</td></tr>
+                                <tr><td colspan="7" style="text-align: center;">Silakan pilih PO untuk melihat item.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -153,7 +100,7 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
                             <span>Total Nilai Diterima: </span>
                             <span id="grand-total">Rp 0</span>
                         </div>
-                        <div>
+                        <div style="padding: 28px 0 0 0; border-top: none; display:flex; gap:1rem;">
                             <button type="button" class="btn btn-secondary" onclick="resetForm()">Batal/Reset</button>
                             <button type="submit" class="btn btn-primary">Simpan Penerimaan</button>
                         </div>
@@ -163,7 +110,7 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
             
             <div class="card">
                 <div class="card-header">
-                    <h2 style="color: var(--primary-green);">Daftar Penerimaan</h2>
+                    <h2>Daftar Penerimaan</h2>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -174,8 +121,8 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
                                     <th>ID PO</th>
                                     <th>Penerima</th>
                                     <th>Tanggal Terima</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
+                                    <th style="text-align: center;">Status</th>
+                                    <th style="text-align: center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tableBody">
@@ -188,8 +135,56 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
         </div>
     </div>
 
+    <div id="modalDetailPenerimaan" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="detailModalTitle">Detail Penerimaan</h3>
+                <button class="close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 28px;">
+                <div class="form-row" style="margin-bottom: 20px; background: #f7f7f7; padding: 16px; border-radius: 8px;">
+                    <div class="form-group"><label>ID Penerimaan:</label>
+                        <p id="detailIdTerima" class="modal-info"></p>
+                    </div>
+                    <div class="form-group"><label>ID Pengadaan (PO):</label>
+                        <p id="detailIdPO" class="modal-info"></p>
+                    </div>
+                    <div class="form-group"><label>Vendor:</label>
+                        <p id="detailVendor" class="modal-info"></p>
+                    </div>
+                    <div class="form-group"><label>Tanggal Terima:</label>
+                        <p id="detailTanggal" class="modal-info"></p>
+                    </div>
+                    <div class="form-group"><label>Status PO:</label>
+                        <p id="detailStatusPO" class="modal-info"></p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <h4 style="margin-bottom: 10px; color: var(--text-color-dark);">Item yang Diterima</h4>
+                    <table id="detail-item-list-table">
+                        <thead>
+                            <tr>
+                                <th>Nama Barang</th>
+                                <th width="15%" style="text-align: right;">Jml. Diterima</th>
+                                <th width="20%" style="text-align: right;">Harga Satuan Terima</th>
+                                <th width="20%" style="text-align: right;">Subtotal Terima</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-item-list-body"></tbody>
+                    </table>
+                </div>
+                <div class="total-section" style="margin-top: 20px;">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+
 <script>
 const API_URL = '../model/penerimaan.php'; 
+// PPN RATE dari pengadaan.php
+const PPN_RATE = 0.10; 
 
 document.addEventListener('DOMContentLoaded', () => {
     loadOpenPOs();
@@ -197,12 +192,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tanggal').valueAsDate = new Date();
 });
 
-const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number || 0);
 
 // --- UTILITY FUNCTIONS ---
 function showLoading(state) {
     const loadingElement = document.getElementById('loading-indicator');
     if (loadingElement) {
+        // Menggunakan ternary operator untuk display
         loadingElement.style.display = state ? 'block' : 'none';
     }
 }
@@ -240,7 +236,7 @@ async function loadOpenPOs() {
             const tanggal = new Date(po.timestamp).toLocaleDateString('id-ID');
             const option = document.createElement('option');
             option.value = po.idpengadaan;
-            option.textContent = `PO# ${po.idpengadaan} - ${po.nama_vendor} (${tanggal})`;
+            option.textContent = `PO# ${po.idpengadaan} (${po.status_teks}) - ${po.nama_vendor} (${tanggal})`;
             option.setAttribute('data-vendor-name', po.nama_vendor);
             select.appendChild(option);
         });
@@ -262,11 +258,12 @@ async function loadPenerimaan() {
 
     if (result.success && result.data.length > 0) {
         tbody.innerHTML = result.data.map(p => {
+            // Menggunakan badge style dari pengadaan.css
             const statusMap = {
                 'P': { text: 'Proses', class: 'badge-info' }, 
                 'S': { text: 'Sebagian', class: 'badge-warning' }, 
                 'F': { text: 'Selesai', class: 'badge-success' },
-                'C': { text: 'Batal', class: 'badge-secondary' } // Ditambahkan untuk konsistensi
+                'C': { text: 'Batal', class: 'badge-secondary' }
             };
             const statusInfo = statusMap[p.status] || { text: p.status, class: 'badge-secondary' };
             const tanggal = new Date(p.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
@@ -278,8 +275,9 @@ async function loadPenerimaan() {
                     <td>${p.username}</td>
                     <td>${tanggal}</td>
                     <td><span class="badge ${statusInfo.class}">${statusInfo.text}</span></td>
-                    <td class="action-buttons">
-                        <button class="btn btn-primary btn-sm" onclick="editPenerimaan('${p.idpenerimaan}')">Detail/Edit</button>
+                    <td class="action-buttons" style="text-align: center;">
+                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewPenerimaanDetails('${p.idpenerimaan}')">Lihat Detail</button>
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); editPenerimaan('${p.idpenerimaan}')">Edit</button>
                     </td>
                 </tr>
             `;
@@ -289,6 +287,107 @@ async function loadPenerimaan() {
     }
 }
 
+// ============================================
+// VIEW DETAIL PENERIMAAN (POP UP)
+// ============================================
+async function viewPenerimaanDetails(idpenerimaan) {
+    // 1. Ambil detail penerimaan
+    const result_terima = await fetchData(`${API_URL}?action=get_penerimaan_details&id=${idpenerimaan}`);
+    if (!result_terima.success || !result_terima.data) {
+        alert('Gagal memuat detail penerimaan.');
+        return;
+    }
+
+    const terima = result_terima.data;
+    const idpengadaan = terima.header.idpengadaan;
+    
+    // 2. Ambil detail PO untuk mendapatkan PPN dan total nilai PO
+    const PO_API_URL = '../model/pengadaan.php';
+    const result_po = await fetchData(`${PO_API_URL}?id=${idpengadaan}`);
+
+    if (!result_po.success || !result_po.data) {
+        alert('Gagal memuat detail Pengadaan (PO) terkait.');
+        return;
+    }
+    
+    const po = result_po.data;
+    const detailBody = document.getElementById('detail-item-list-body');
+    const totalSectionContainer = document.querySelector('#modalDetailPenerimaan .modal-body .total-section');
+    let totalSubtotalTerima = 0;
+
+    // --- Isi Header Modal ---
+    document.getElementById('detailModalTitle').textContent = `Detail Penerimaan ID-${idpenerimaan}`;
+    document.getElementById('detailIdTerima').textContent = idpenerimaan;
+    document.getElementById('detailIdPO').textContent = `PO-${idpengadaan}`;
+    document.getElementById('detailVendor').textContent = po.nama_vendor;
+    document.getElementById('detailTanggal').textContent = new Date(terima.header.created_at).toLocaleDateString('id-ID');
+    // NOTE: po.status adalah status DB ('p', 's', 'f', 'c'). Kita gunakan getStatusBadge untuk tampilan yang konsisten.
+    document.getElementById('detailStatusPO').innerHTML = getStatusBadge(po.status); 
+
+    // --- Isi Item Diterima ---
+    detailBody.innerHTML = '';
+    terima.details.forEach(item => {
+        const subtotal = item.jumlah * item.harga_satuan;
+        totalSubtotalTerima += subtotal; 
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.nama_barang}</td>
+            <td style="text-align: right;">${item.jumlah}</td>
+            <td style="text-align: right;">${formatRupiah(item.harga_satuan)}</td>
+            <td style="text-align: right;">${formatRupiah(subtotal)}</td>
+        `;
+        detailBody.appendChild(row);
+    });
+
+    // --- Hitung dan Isi Total Section (Konsisten dengan PO) ---
+    
+    // 1. Subtotal PO (Nilai sebelum PPN, dari data PO)
+    const poSubtotal = po.subtotal_nilai; // Ambil subtotal langsung dari data PO
+    const poPPN = po.ppn; // Ambil PPN langsung dari data PO
+    const poGrandTotal = po.total_nilai; // Ambil Total Akhir langsung dari data PO
+    
+    // Reset Total Section
+    totalSectionContainer.innerHTML = ''; 
+
+    // 1. Total Nilai Item Diterima (Subtotal Penerimaan)
+    totalSectionContainer.innerHTML += `
+        <div class="modal-total-line">
+            <span>Subtotal Nilai Diterima:</span>
+            <span style="color: var(--accent-green);">${formatRupiah(totalSubtotalTerima)}</span>
+        </div>
+    `;
+
+    // 2. Garis Pemisah untuk PO Value
+    totalSectionContainer.innerHTML += `<hr style="border-top: 1px dashed #ccc;">`;
+
+
+    // 3. Subtotal Nilai PO
+    totalSectionContainer.innerHTML += `
+        <div class="modal-total-line">
+            <span>Subtotal Nilai PO:</span>
+            <span>${formatRupiah(poSubtotal)}</span>
+        </div>
+    `;
+
+    // 4. PPN PO 10%
+    totalSectionContainer.innerHTML += `
+        <div class="modal-total-line">
+            <span>PPN PO (${PPN_RATE * 100}%):</span>
+            <span>${formatRupiah(poPPN)}</span>
+        </div>
+    `;
+
+    // 5. Total Akhir PO (Grand Total)
+    totalSectionContainer.innerHTML += `
+        <div class="modal-total-line final" style="border-top: 1px solid #eee; padding-top: 5px;">
+            <span>Total Akhir PO:</span>
+            <span id="detail-grand-total">${formatRupiah(poGrandTotal)}</span>
+        </div>
+    `;
+    
+    // Show Modal
+    document.getElementById('modalDetailPenerimaan').classList.add('show');
+}
 
 /**
  * Handler saat PO dipilih dari dropdown.
@@ -306,7 +405,7 @@ async function handlePOSelection(e) {
         vendorInput.value = '';
         vendorInput.placeholder = 'Pilih PO untuk menampilkan vendor';
         document.getElementById('idpengadaan').value = ''; 
-        itemListBody.innerHTML = '<tr><td colspan="7" class="text-center">Silakan pilih PO untuk melihat item.</td></tr>';
+        itemListBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Silakan pilih PO untuk melihat item.</td></tr>';
         updateTotals();
         return;
     }
@@ -325,13 +424,10 @@ async function handlePOSelection(e) {
         let itemsAvailable = false;
 
         data.forEach(item => {
-            // Hitung Sisa Dipesan dari data yang dikirim backend
             const sisaDipesan = item.jumlah_dipesan - item.total_diterima;
-            const totalReceived = item.total_diterima; // Sudah ada dari backend
+            const totalReceived = item.total_diterima; 
 
             if (sisaDipesan > 0) {
-                // Gunakan sisaDipesan sebagai nilai default dan maks input
-                // Item kini harus memiliki item.jumlah_dipesan, item.total_diterima, item.harga_satuan
                 addItemRow(item, sisaDipesan, sisaDipesan, totalReceived);
                 itemsAvailable = true;
             }
@@ -346,7 +442,7 @@ async function handlePOSelection(e) {
         updateTotals();
     } else {
         alert('Gagal memuat detail PO atau PO tidak memiliki item.');
-        itemListBody.innerHTML = '<tr><td colspan="7" class="text-center">Gagal memuat detail PO.</td></tr>';
+        itemListBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Gagal memuat detail PO.</td></tr>';
     }
 }
 
@@ -365,18 +461,20 @@ function addItemRow(item, currentQty, maxQty = null, totalReceived = 0) {
     
     const maxAttr = maxQty !== null ? `max="${maxQty}"` : ''; 
     const titleAttr = maxQty !== null ? `title="Maksimal ${maxQty} item yang bisa diterima"` : `title="Jumlah diterima"`;
+    
+    const sisaBelumTerima = item.jumlah_dipesan - totalReceived;
 
     row.innerHTML = `
         <td>${item.nama_barang} (${item.idbarang})</td>
-        <td>${item.jumlah_dipesan}</td>
-        <td>${totalReceived}</td>
-        <td>${item.jumlah_dipesan - totalReceived}</td>
+        <td style="text-align: center;">${item.jumlah_dipesan}</td>
+        <td style="text-align: center;">${totalReceived}</td>
+        <td style="text-align: center;">${sisaBelumTerima}</td>
         <td>
             <input type="number" class="item-qty form-control" value="${currentQty}" min="0" ${maxAttr} oninput="updateItemAndTotals(this)" 
-            ${titleAttr} style="width: 100px;">
+            ${titleAttr}>
         </td>
-        <td class="item-price" data-price="${item.harga_satuan}">${formatRupiah(item.harga_satuan)}</td>
-        <td class="item-subtotal">${formatRupiah(subtotal)}</td>
+        <td class="item-price" data-price="${item.harga_satuan}" style="text-align: right;">${formatRupiah(item.harga_satuan)}</td>
+        <td class="item-subtotal" style="text-align: right;">${formatRupiah(subtotal)}</td>
     `;
     itemListBody.appendChild(row);
 }
@@ -454,9 +552,17 @@ async function editPenerimaan(idpenerimaan) {
     itemListBody.innerHTML = '';
     data.details.forEach(item => {
         const qtyReceived = parseFloat(item.jumlah); 
+        // Saat edit, Jml. Dipesan, Total Sudah Terima, Sisa Belum Terima tidak diketahui, diisi 0/placeholder
         addItemRow(item, qtyReceived, null, 0); 
     });
 
+    // Perlu diisi placeholder untuk Jml. Dipesan, Total Sudah Terima, Sisa Belum Terima saat edit
+    document.querySelectorAll('#item-list-body tr').forEach(row => {
+        row.children[1].textContent = '-'; // Jml. Dipesan
+        row.children[2].textContent = '-'; // Total Sudah Terima
+        row.children[3].textContent = '-'; // Sisa Belum Terima
+    });
+    
     updateTotals();
     window.scrollTo(0, 0); 
 }
@@ -469,7 +575,7 @@ function resetForm() {
     document.getElementById('idpenerimaan_edit').value = '';
     document.getElementById('formMethod').value = 'POST';
     document.getElementById('tanggal').valueAsDate = new Date();
-    document.getElementById('item-list-body').innerHTML = '<tr><td colspan="7" class="text-center">Silakan pilih PO untuk melihat item.</td></tr>';
+    document.getElementById('item-list-body').innerHTML = '<tr><td colspan="7" style="text-align: center;">Silakan pilih PO untuk melihat item.</td></tr>';
     document.getElementById('select-po').disabled = false;
     document.getElementById('nama_vendor').value = '';
     document.getElementById('nama_vendor').placeholder = 'Pilih PO untuk menampilkan vendor';
@@ -499,7 +605,7 @@ document.getElementById('formPenerimaan').addEventListener('submit', async (e) =
                 items.push({
                     idbarang: row.dataset.idbarang,
                     jumlah: qty,
-                    harga: price 
+                    harga: price // Harga satuan PO digunakan sebagai harga satuan terima
                 });
                 grandTotal += qty * price;
             }
@@ -542,6 +648,38 @@ document.getElementById('formPenerimaan').addEventListener('submit', async (e) =
         }
     } catch (error) {
         alert('Terjadi kesalahan saat berkomunikasi dengan server: ' + error.message);
+    }
+});
+
+function getStatusBadge(status) {
+    // Menggunakan logika badge dari manage_pengadaan.php
+    switch (status) {
+        case 'Closed/Batal':
+        case 'c':
+            return `<span class="badge badge-danger">Closed/Batal</span>`;
+        case 'Diterima Penuh':
+        case 'f':
+            return `<span class="badge badge-success">Diterima Penuh</span>`;
+        case 'Parsial':
+        case 's':
+            return `<span class="badge badge-warning">Parsial</span>`;
+        case 'Dipesan':
+        case 'p':
+            return `<span class="badge badge-info">Dipesan (Proses)</span>`;
+        default:
+            return `<span class="badge badge-secondary">${status}</span>`;
+    }
+}
+
+
+function closeDetailModal() {
+    document.getElementById('modalDetailPenerimaan').classList.remove('show');
+}
+
+// Close detail modal if clicked outside
+window.addEventListener('click', (event) => {
+    if (event.target == document.getElementById('modalDetailPenerimaan')) {
+        closeDetailModal();
     }
 });
 </script>

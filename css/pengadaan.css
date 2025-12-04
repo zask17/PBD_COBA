@@ -1,17 +1,3 @@
-/* ============================================================================
-   PENGADAAN CSS - Clean & Modern Design
-   ============================================================================ */
-
-/* ========================================
-   1. LAYOUT & SPACING
-   ======================================== */
-
-
-/* ========================================
-   2. CARD & FORM LAYOUT
-   ======================================== */
-
-/* Card Base */
 .card {
     background: #FFFFFF;
     border-radius: 12px;
@@ -76,7 +62,7 @@
     border-top: 1px solid #eee;
 }
 
-.form-footer > div:last-child {
+.form-footer>div:last-child {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -419,6 +405,7 @@
         opacity: 0;
         transform: translateY(-50px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -431,6 +418,7 @@
    ======================================== */
 
 @media (max-width: 768px) {
+
     /* Form Layout */
     .form-row {
         flex-direction: column;
@@ -442,7 +430,7 @@
         flex-direction: column;
     }
 
-    .form-footer > div:last-child {
+    .form-footer>div:last-child {
         flex-direction: column;
         gap: 10px;
     }

@@ -201,3 +201,113 @@ select {
         transform: translateY(0);
     }
 }
+
+
+
+/* MODAL TAPI GA JADI */
+
+.card-header h2,
+.form-header h2 {
+    color: var(--primary-green) !important;
+}
+
+/* Memastikan input di tabel item penerimaan memiliki lebar yang wajar */
+#item-list-table input.item-qty {
+    width: 100%;
+    max-width: 100px;
+    text-align: center;
+    border: 1px solid #ccc;
+    /* Pastikan border muncul */
+    padding: 5px;
+    border-radius: 4px;
+}
+
+
+/* Tambahkan style untuk konsistensi di modal */
+#modalDetailPengadaan .modal-body .form-group label {
+    color: #666;
+}
+
+#modalDetailPengadaan .modal-info {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 5px;
+}
+
+/* Sesuaikan total section di modal agar mirip manage_pengadaan.php */
+#modalDetailPengadaan .total-section .modal-total-line {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 5px;
+    font-size: 1rem;
+}
+
+
+#modalDetailPengadaan .total-section .modal-total-line span:first-child {
+    width: 150px;
+    font-weight: 400;
+    color: #666;
+    text-align: right;
+}
+
+#modalDetailPengadaan .total-section .modal-total-line span:last-child {
+    width: 120px;
+    font-weight: 700;
+    text-align: right;
+    color: #333;
+    display: inline-block;
+}
+
+#modalDetailPengadaan .total-section .modal-total-line.final span:last-child {
+    color: var(--primary-green);
+    font-size: 1.2rem;
+}
+
+/* Style untuk badge PO Status di Modal */
+#detailStatusPO .badge {
+    font-size: 1rem;
+    padding: 6px 10px;
+}
+
+/* Modal Info Header style dari pengadaan.php */
+#modalDetailPenerimaan .modal-body .form-group label {
+    color: #666;
+    /* Warna label yang lebih lembut */
+}
+
+#modalDetailPenerimaan .modal-info {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    /* Warna info yang lebih gelap */
+    margin-top: 5px;
+}
+
+/* Total Section untuk Modal */
+#modalDetailPenerimaan .total-section .modal-total-line {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 5px;
+    font-size: 1rem;
+}
+
+#modalDetailPenerimaan .total-section .modal-total-line span:first-child {
+    width: 150px;
+    font-weight: 400;
+    color: #666;
+    text-align: left;
+}
+
+#modalDetailPenerimaan .total-section .modal-total-line span:last-child {
+    width: 120px;
+    font-weight: 700;
+    text-align: right;
+    color: #333;
+}
+
+#modalDetailPenerimaan .total-section .modal-total-line.final span:last-child {
+    color: var(--primary-green);
+    font-size: 1.2rem;
+}
