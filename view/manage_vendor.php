@@ -5,8 +5,9 @@ require_once '../model/auth.php';
 
 checkAuth();
 
-// DISESUAIKAN: Variabel status aktif/non-aktif menggunakan kode 'A' dan 'N'
-$vendor_statuses = ['A' => 'Aktif', 'N' => 'Non-Aktif']; 
+// DISESUAIKAN: Variabel status aktif/non-aktif menggunakan kode 'A' dan 'N'/'T'
+// Menggunakan 'T' sesuai skema DDL: WHEN status = 'T' THEN 'Non-Aktif'
+$vendor_statuses = ['A' => 'Aktif', 'T' => 'Non-Aktif']; 
 // DISESUAIKAN: Variabel badan hukum menggunakan kode 'A' dan 'T'
 $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Hukum (CV/UD)']; 
 ?>
@@ -20,6 +21,13 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/vendor.css">
+    <style>
+        /* CSS Tambahan untuk tombol filter aktif */
+        .btn-filter-group .active {
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.5); 
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body>
@@ -63,11 +71,15 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Vendor</h2>
-                    <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="display: flex; gap: 1rem; align-items: center; margin-left: auto;">
+                        
+                        <div class="btn-filter-group" style="display: flex; gap: 0.5rem;">
+                            <button id="btnVendorAktif" class="btn btn-success btn-sm active" data-filter="aktif">✔ Vendor Aktif</button>
+                            <button id="btnSemuaVendor" class="btn btn-info btn-sm" data-filter="semua">Semua Vendor</button>
+                        </div>
                         <button id="btnTambah" class="btn btn-primary">
                             <span>+</span> Tambah Vendor
                         </button>
-                        <button id="btnFilter" class="btn btn-secondary btn-sm" data-filter="aktif">Tampilkan Semua</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -141,9 +153,11 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
         </div>
 
         <script>
+            let currentFilter = 'aktif'; // Filter default saat halaman dimuat
+
             document.addEventListener('DOMContentLoaded', () => {
                 loadStats();
-                loadVendor();
+                loadVendor(currentFilter);
             });
 
             async function loadStats() {
@@ -160,10 +174,19 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                 }
             }
 
-            async function loadVendor() {
-                const filterButton = document.getElementById('btnFilter');
-                const filter = filterButton.dataset.filter; // 'aktif' atau 'semua'
+            async function loadVendor(filter) {
+                currentFilter = filter;
                 const url = `../model/vendor.php?filter=${filter}`;
+                const tbody = document.getElementById('tableBody');
+                
+                // Update tampilan tombol filter
+                document.getElementById('btnVendorAktif').classList.remove('active');
+                document.getElementById('btnSemuaVendor').classList.remove('active');
+                if (filter === 'aktif') {
+                    document.getElementById('btnVendorAktif').classList.add('active');
+                } else {
+                    document.getElementById('btnSemuaVendor').classList.add('active');
+                }
 
                 try {
                     const response = await fetch(url);
@@ -174,7 +197,6 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     }
 
                     const result = await response.json();
-                    const tbody = document.getElementById('tableBody');
 
                     if (result.success && result.data.length > 0) {
                         tbody.innerHTML = result.data.map(item => `
@@ -200,25 +222,22 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #f5576c;">Gagal memuat data. Periksa konsol untuk detail.</td></tr>`;
                 }
             }
-
-            document.getElementById('btnFilter').addEventListener('click', function() {
-                const currentFilter = this.dataset.filter;
-
-                if (currentFilter === 'aktif') {
-                    this.dataset.filter = 'semua';
-                    this.textContent = 'Tampilkan Aktif Saja'; 
-                } else { // currentFilter === 'semua'
-                    this.dataset.filter = 'aktif';
-                    this.textContent = 'Tampilkan Semua'; 
-                }
-                loadVendor();
+            
+            // Event Listeners untuk tombol filter baru
+            document.getElementById('btnVendorAktif').addEventListener('click', () => {
+                loadVendor('aktif');
             });
+
+            document.getElementById('btnSemuaVendor').addEventListener('click', () => {
+                loadVendor('semua');
+            });
+
 
             document.getElementById('btnTambah').addEventListener('click', () => {
                 document.getElementById('modalTitle').textContent = 'Tambah Vendor';
                 document.getElementById('formVendor').reset();
                 document.getElementById('idvendor').value = '';
-                // Set default status/badan hukum saat tambah baru (opsional)
+                // Set default status/badan hukum saat tambah baru 
                 document.getElementById('badan_hukum').value = 'A'; 
                 document.getElementById('status').value = 'A';
                 document.getElementById('formMethod').value = 'POST';
@@ -247,7 +266,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
             }
 
             async function deleteVendor(id, nama) {
-                if (!confirm(`Nonaktifkan vendor "${nama}"? (Ini akan mengubah statusnya menjadi Non-Aktif/N)`)) return;
+                if (!confirm(`Nonaktifkan vendor "${nama}"? (Ini akan mengubah statusnya menjadi Non-Aktif/T)`)) return;
 
                 try {
                     const formData = new FormData();
@@ -263,7 +282,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     alert(result.message);
 
                     if (result.success) {
-                        loadVendor();
+                        loadVendor(currentFilter); // Muat ulang dengan filter yang aktif
                         loadStats();
                     }
                 } catch (error) {
@@ -286,7 +305,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
 
                     if (result.success) {
                         closeModal();
-                        loadVendor();
+                        loadVendor(currentFilter); // Muat ulang dengan filter yang aktif
                         loadStats();
                     }
                 } catch (error) {

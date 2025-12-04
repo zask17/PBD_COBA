@@ -1,6 +1,6 @@
 <?php
-require_once 'koneksi.php'; // Pastikan koneksi.php ada dan berfungsi
-require_once 'auth.php'; // Pastikan auth.php ada dan berfungsi
+require_once 'koneksi.php'; 
+require_once 'auth.php'; 
 
 // Set header untuk output JSON
 header('Content-Type: application/json; charset=utf-8');
@@ -47,7 +47,7 @@ function handleGet($dbconn) {
     $id = $_GET['id'] ?? null;
 
     if ($id) {
-        // 1. Ambil satu vendor untuk form edit
+        // 1. Ambil satu vendor untuk form edit (menggunakan tabel dasar untuk data mentah)
         $stmt = $dbconn->prepare("SELECT idvendor, nama_vendor, badan_hukum, status FROM vendor WHERE idvendor = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -59,7 +59,6 @@ function handleGet($dbconn) {
 
     } elseif ($action === 'get_stats') {
         // 2. Ambil statistik untuk dashboard
-        // DISESUAIKAN: Menghitung status aktif berdasarkan kode 'A' Anda
         $sql = "SELECT 
                     COUNT(idvendor) as total_vendor,
                     SUM(CASE WHEN status = 'A' THEN 1 ELSE 0 END) as total_aktif
@@ -78,60 +77,44 @@ function handleGet($dbconn) {
         }
 
     } else {
-        // 3. Ambil daftar semua vendor (atau yang difilter)
+        // 3. Ambil daftar semua vendor (atau yang difilter) menggunakan View
         
-        $filter = $_GET['filter'] ?? 'aktif'; // Filter default
+        $filter = $_GET['filter'] ?? 'semua'; // Filter default
         
-        $sql = "SELECT 
-                    idvendor, 
-                    nama_vendor, 
-                    badan_hukum, 
-                    status
-                FROM vendor";
+        $sql = "";
         
-        $whereClause = [];
-        // DISESUAIKAN: Filter status aktif berdasarkan kode 'A' Anda
         if ($filter === 'aktif') {
-            $whereClause[] = "status = 'A'";
+            // Menggunakan V_VENDOR_SEMUA dan memfilter hasilnya di PHP (karena V_VENDOR_AKTIF asli hanya mengembalikan 3 kolom)
+            // Atau jika kita mengasumsikan V_VENDOR_AKTIF sudah diubah untuk mengembalikan data lengkap:
+            $sql = "SELECT 
+                        idvendor, 
+                        VENDOR AS nama_vendor, 
+                        `BADAN HUKUM` AS jenis_badan_hukum,
+                        'Aktif' AS status_aktif
+                    FROM V_VENDOR_SEMUA 
+                    WHERE STATUS = 'Aktif' 
+                    ORDER BY idvendor ASC";
+            
+        } else { // 'semua'
+            // Menggunakan V_VENDOR_SEMUA
+            $sql = "SELECT 
+                        idvendor, 
+                        VENDOR AS nama_vendor, 
+                        `BADAN HUKUM` AS jenis_badan_hukum,
+                        STATUS AS status_aktif
+                    FROM V_VENDOR_SEMUA 
+                    ORDER BY idvendor ASC";
         }
-
-        if (!empty($whereClause)) {
-            $sql .= " WHERE " . implode(" AND ", $whereClause);
-        }
-
-        $sql .= " ORDER BY idvendor ASC";
 
         $result = $dbconn->query($sql);
 
         if ($result) {
-            $data_raw = $result->fetch_all(MYSQLI_ASSOC);
-            
-            // Lakukan formatting data secara manual (Mapping sesuai skema 'A'/'T' dan 'A'/'N')
-            $data_formatted = array_map(function($item) {
-                // DISESUAIKAN: Konversi kode badan hukum
-                $jenis_badan_hukum = match ($item['badan_hukum']) {
-                    'A' => 'Berbadan Hukum (Contoh: PT)',
-                    'T' => 'Tidak Berbadan Hukum (Contoh: CV/UD)',
-                    default => 'Tidak Diketahui',
-                };
-
-                // DISESUAIKAN: Konversi status
-                $status_aktif = ($item['status'] === 'A') ? 'Aktif' : 'Non-Aktif';
-                
-                return [
-                    'idvendor' => $item['idvendor'],
-                    'nama_vendor' => $item['nama_vendor'],
-                    'badan_hukum' => $item['badan_hukum'],
-                    'status' => $item['status'],
-                    'jenis_badan_hukum' => $jenis_badan_hukum, // Data terformat untuk tampilan
-                    'status_aktif' => $status_aktif // Data terformat untuk tampilan
-                ];
-            }, $data_raw);
+            $data_formatted = $result->fetch_all(MYSQLI_ASSOC);
 
             echo json_encode(['success' => true, 'data' => $data_formatted]);
         } else {
             http_response_code(500); // Internal Server Error
-            echo json_encode(['success' => false, 'message' => 'Gagal mengambil data vendor: ' . $dbconn->error]);
+            echo json_encode(['success' => false, 'message' => 'Gagal mengambil data vendor: ' . $dbconn->error . '. Pastikan V_VENDOR_SEMUA ada.']);
         }
     }
 }
@@ -141,10 +124,15 @@ function handleGet($dbconn) {
  */
 function handlePost($dbconn) {
     // CREATE VENDOR
-    // Data yang diterima dari form sudah menggunakan kode 'A'/'T' dan 'A'/'N'
-    $nama_vendor = $_POST['nama_vendor'];
-    $badan_hukum = $_POST['badan_hukum'];
-    $status = $_POST['status']; 
+    $nama_vendor = $_POST['nama_vendor'] ?? null;
+    $badan_hukum = $_POST['badan_hukum'] ?? null;
+    $status = $_POST['status'] ?? null; 
+
+    if (empty($nama_vendor) || empty($badan_hukum) || empty($status)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Semua field wajib diisi.']);
+        return;
+    }
 
     $stmt = $dbconn->prepare("INSERT INTO vendor (nama_vendor, badan_hukum, status) VALUES (?, ?, ?)");
     $stmt->bind_param("sss", $nama_vendor, $badan_hukum, $status);
@@ -163,11 +151,17 @@ function handlePost($dbconn) {
  */
 function handlePut($dbconn) {
     // UPDATE VENDOR
-    $idvendor = $_POST['idvendor'];
-    $nama_vendor = $_POST['nama_vendor'];
-    $badan_hukum = $_POST['badan_hukum'];
-    $status = $_POST['status'];
+    $idvendor = $_POST['idvendor'] ?? null;
+    $nama_vendor = $_POST['nama_vendor'] ?? null;
+    $badan_hukum = $_POST['badan_hukum'] ?? null;
+    $status = $_POST['status'] ?? null;
 
+    if (empty($idvendor) || empty($nama_vendor) || empty($badan_hukum) || empty($status)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Semua field wajib diisi.']);
+        return;
+    }
+    
     $stmt = $dbconn->prepare("UPDATE vendor SET nama_vendor = ?, badan_hukum = ?, status = ? WHERE idvendor = ?");
     $stmt->bind_param("sssi", $nama_vendor, $badan_hukum, $status, $idvendor);
 
@@ -185,10 +179,15 @@ function handlePut($dbconn) {
  */
 function handleDelete($dbconn) {
     // DELETE VENDOR (Soft Delete: Ubah status menjadi 'N'/Non-Aktif)
-    $idvendor = $_POST['idvendor'];
+    $idvendor = $_POST['idvendor'] ?? null;
     
-    // DISESUAIKAN: Mengubah status menjadi 'N'
-    $stmt = $dbconn->prepare("UPDATE vendor SET status = 'N' WHERE idvendor = ?");
+    if (empty($idvendor)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID Vendor tidak valid.']);
+        return;
+    }
+
+    $stmt = $dbconn->prepare("UPDATE vendor SET status = 'T' WHERE idvendor = ?"); // Menggunakan 'T' (Non-Aktif) berdasarkan skema Anda
     $stmt->bind_param("i", $idvendor);
 
     if ($stmt->execute()) {
