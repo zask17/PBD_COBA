@@ -18,5 +18,3 @@ if ($dbconn->connect_error) {
 $dbconn->set_charset("utf8");
 
 // echo "Koneksi database berhasil!";
-
-?>
