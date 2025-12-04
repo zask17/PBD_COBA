@@ -35,17 +35,19 @@ switch ($method) {
         break;
 }
 
-$dbconn->close();
+if (isset($dbconn) && $dbconn) {
+    $dbconn->close();
+}
 
 function handleGet($dbconn) {
     $action = $_GET['action'] ?? null;
     $id = $_GET['id'] ?? null;
-    $id_int = intval($id); // Sanitasi ID
+    $id_int = intval($id); 
 
     if ($action === 'get_roles') {
         // --- Ambil daftar role untuk dropdown ---
         // Menggunakan tabel role langsung
-        $result = $dbconn->query("SELECT idrole, nama_role FROM role ORDER BY nama_role");
+        $result = $dbconn->query("SELECT idrole, nama_role FROM role ORDER BY nama_role ASC");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['success' => true, 'data' => $data]);
     } elseif ($id) {
@@ -64,30 +66,25 @@ function handleGet($dbconn) {
         }
     } else {
         // --- Ambil semua user dengan nama role-nya menggunakan VIEW V_USER_ROLE ---
-        $sql = "SELECT iduser, NAMA AS username, ROLE AS nama_role FROM V_USER_ROLE ORDER BY iduser ASC";
+        // Kolom di view: iduser, NAMA, ROLE
+        $sql = "SELECT iduser, 
+                       NAMA AS username, 
+                       ROLE AS nama_role 
+                FROM V_USER_ROLE 
+                ORDER BY iduser ASC";
 
         $result = $dbconn->query($sql);
         
         if ($result === false) {
-             // Debugging jika query gagal (misalnya koneksi atau tabel error)
              http_response_code(500);
-             echo json_encode(['success' => false, 'message' => 'Query V_USER_ROLE gagal dieksekusi: ' . $dbconn->error]);
+             echo json_encode(['success' => false, 'message' => 'Query V_USER_ROLE gagal dieksekusi: ' . $dbconn->error . '. Pastikan V_USER_ROLE ada.']);
              return;
         }
         
         $data = $result->fetch_all(MYSQLI_ASSOC);
         
-        // Mapping kolom NAMA dan ROLE dari View
-        $mapped_data = array_map(function($item) {
-            // Kolom sudah di-alias di query: NAMA AS username, ROLE AS nama_role
-            return [
-                'iduser' => $item['iduser'],
-                'username' => $item['username'],
-                'nama_role' => $item['nama_role']
-            ];
-        }, $data);
-
-        echo json_encode(['success' => true, 'data' => $mapped_data]);
+        // Data sudah di-alias di SQL: NAMA -> username, ROLE -> nama_role
+        echo json_encode(['success' => true, 'data' => $data]);
     }
 }
 
@@ -102,9 +99,8 @@ function handlePost($dbconn) {
         return;
     }
 
-    // Menggunakan password_hash() untuk keamanan
-    // Catatan: Jika ini adalah project PBD awal yang menggunakan perbandingan langsung,
-    // Anda harus mengubah ini menjadi $hashed_password = $password;
+    // Menggunakan password_hash() untuk keamanan, atau langsung $password jika PBD menggunakan plain text
+    // Asumsi: Kita gunakan password_hash() karena lebih aman.
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     $idrole_int = intval($idrole);
 
@@ -135,7 +131,6 @@ function handlePut($dbconn) {
     $idrole_int = intval($idrole);
 
     if (!empty($password)) {
-        // Menggunakan password_hash() untuk keamanan
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $dbconn->prepare("UPDATE user SET username = ?, password = ?, idrole = ? WHERE iduser = ?");
         $stmt->bind_param("ssii", $username, $hashed_password, $idrole_int, $iduser_int);
@@ -145,6 +140,7 @@ function handlePut($dbconn) {
     }
 
     if ($stmt->execute()) {
+        // Memberikan pesan sukses meskipun affected_rows = 0 (data tidak berubah)
         echo json_encode(['success' => true, 'message' => 'User berhasil diperbarui.']);
     } else {
         http_response_code(500);
@@ -164,7 +160,6 @@ function handleDelete($dbconn) {
     $iduser_int = intval($iduser);
 
     // Cek agar tidak menghapus user sendiri
-    // Perbaikan: Session ID harus diambil dari variabel yang benar, di sini diasumsikan $_SESSION['iduser']
     if (isset($_SESSION['iduser']) && $_SESSION['iduser'] == $iduser_int) {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Anda tidak dapat menghapus akun Anda sendiri.']);

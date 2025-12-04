@@ -44,8 +44,8 @@ checkAuth();
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Pengguna</h2>
-                    <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
-                    <button id="btnTambah" class="btn btn-primary"><span>Tambah User</span></button>
+                    <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                    <button id="btnTambah" class="btn btn-primary"><span>+</span> Tambah User</button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -112,7 +112,7 @@ checkAuth();
     </div>
 
     <script>
-        const API_URL = '../model/users.php'; // Path yang benar ke API
+        const API_URL = '../model/users.php'; 
 
         document.addEventListener('DOMContentLoaded', () => {
             loadUsers();
@@ -121,11 +121,9 @@ checkAuth();
 
         async function loadUsers() {
             try {
-                // Perbaikan: Path ke API dan tidak menggunakan models/
                 const response = await fetch(API_URL);
                 if (response.status === 401) {
                     alert('Sesi Anda telah berakhir. Silakan login kembali.');
-                    // Perbaikan: Arahkan ke login.php di folder view
                     window.location.href = 'login.php'; 
                     return;
                 }
@@ -155,7 +153,6 @@ checkAuth();
 
         async function loadRoles() {
             try {
-                // Perbaikan: Path ke API
                 const response = await fetch(`${API_URL}?action=get_roles`); 
                 const result = await response.json();
                 if (result.success) {
@@ -172,8 +169,8 @@ checkAuth();
             document.getElementById('modalTitle').textContent = 'Tambah User';
             document.getElementById('formUser').reset();
             document.getElementById('iduser').value = '';
-            document.getElementById('formMethod').value = 'POST'; // Tambah harus menggunakan POST
-            document.getElementById('password').required = true; // Password wajib saat tambah
+            document.getElementById('formMethod').value = 'POST'; 
+            document.getElementById('password').required = true; 
             document.getElementById('modalForm').classList.add('show');
         });
 
@@ -185,11 +182,11 @@ checkAuth();
                     const data = result.data;
                     document.getElementById('modalTitle').textContent = 'Edit User';
                     document.getElementById('iduser').value = data.iduser;
-                    document.getElementById('formMethod').value = 'PUT'; // Edit harus menggunakan PUT
+                    document.getElementById('formMethod').value = 'PUT'; 
                     document.getElementById('username').value = data.username;
                     document.getElementById('idrole').value = data.idrole;
-                    document.getElementById('password').value = ''; // Kosongkan password
-                    document.getElementById('password').required = false; // Password tidak wajib saat edit
+                    document.getElementById('password').value = ''; 
+                    document.getElementById('password').required = false; 
                     document.getElementById('modalForm').classList.add('show');
                 }
             } catch (error) {
@@ -201,11 +198,10 @@ checkAuth();
             if (!confirm(`Yakin ingin menghapus user "${nama}"? Aksi ini tidak dapat dibatalkan.`)) return;
             
             const formData = new FormData();
-            formData.append('_method', 'DELETE'); // Metode DELETE dikirim melalui _method
+            formData.append('_method', 'DELETE'); 
             formData.append('iduser', id);
             
             try {
-                // Perbaikan: Path ke API
                 const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const result = await response.json();
                 alert(result.message);
@@ -220,7 +216,6 @@ checkAuth();
             const formData = new FormData(e.target);
             const method = formData.get('_method');
 
-            // Perbaikan Validasi: Cek jika mode POST (tambah) dan password kosong
             if (method === 'POST' && !formData.get('password')) {
                 alert('Password wajib diisi untuk user baru.');
                 document.getElementById('password').focus();
@@ -228,8 +223,6 @@ checkAuth();
             }
 
             try {
-                // Semua request (POST/PUT/DELETE) dikirim sebagai method: 'POST' di sini, 
-                // dengan method sesungguhnya ditentukan oleh formData.get('_method')
                 const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const result = await response.json();
                 alert(result.message);
