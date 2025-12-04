@@ -8,12 +8,6 @@ checkAuth();
 // Ambil data user untuk ditampilkan di header
 $user_role = $_SESSION['role'] ?? 'Guest';
 $username = $_SESSION['username'] ?? 'Pengguna';
-
-// Pilihan Jenis Barang (Sesuai skema DDL: J=Barang Jadi, B=Bahan Baku)
-$jenis_barang_options = [
-    'J' => 'Barang Jadi',
-    'B' => 'Bahan Baku'
-];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -25,18 +19,6 @@ $jenis_barang_options = [
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/barang.css">
-    <style>
-        /* CSS Tambahan untuk tombol filter aktif */
-        .btn-filter-group .active {
-            box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5); 
-            font-weight: bold;
-        }
-        /* Penyesuaian layout header */
-        .card-header > div:nth-child(2) { /* Menarget div di tengah */
-            margin-left: auto;
-            margin-right: 1rem;
-        }
-    </style>
 </head>
 
 <body>
@@ -59,7 +41,7 @@ $jenis_barang_options = [
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪 Keluar</span></a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>
@@ -83,16 +65,13 @@ $jenis_barang_options = [
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Barang</h2>
-                    
-                    <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
-                    
-                    <div class="btn-filter-group" style="display: flex; gap: 0.5rem; ">
-                        <button id="btnBarangAktif" class="btn btn-success btn-sm active" data-filter="aktif">✔ Barang Aktif</button>
-                        <button id="btnSemuaBarang" class="btn btn-info btn-sm" data-filter="semua">Semua Barang</button>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <button id="btnFilterAktif" class="btn btn-secondary btn-sm" data-filter="aktif">Tampilkan Semua</button>
+                        <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                        <button id="btnTambah" class="btn btn-primary btn-sm">
+                            <span>+</span> Tambah Barang
+                        </button>
                     </div>
-                    <button id="btnTambah" class="btn btn-primary btn-sm">
-                        <span>+</span> Tambah Barang
-                    </button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -125,23 +104,24 @@ $jenis_barang_options = [
         </div>
 
         <div id="modalForm" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h3 id="modalTitle">Tambah Barang</h3>
                     <button class="close" onclick="closeModal()">&times;</button>
                 </div>
                 <form id="formBarang">
                     <input type="hidden" id="idbarang" name="idbarang">
-                    <input type="hidden" id="formMethod" name="_method" value="POST">
+                    <input type="hidden" id="formMethod" name="_method">
 
                     <div id="kodeBarangDisplay" class="form-group" style="display: none;">
                         <label>Kode Barang</label>
                         <input type="text" id="kode_barang" name="kode_barang" readonly>
                     </div>
-                    
                     <div class="form-group">
-                        <label for="nama_barang">Nama Barang *</label>
-                        <input type="text" id="nama_barang" name="nama_barang" required>
+                        <div class="form-group">
+                            <label for="nama_barang">Nama Barang *</label>
+                            <input type="text" id="nama_barang" name="nama_barang" required>
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -152,23 +132,22 @@ $jenis_barang_options = [
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="jenis_barang">Jenis Barang *</label>
-                            <select id="jenis_barang" name="jenis_barang" required>
+                            <label for="jenis_barang">Jenis Barang</label>
+                            <select id="jenis_barang" name="jenis_barang">
                                 <option value="">Pilih Jenis</option>
-                                <?php foreach ($jenis_barang_options as $key => $value): ?>
-                                    <option value="<?php echo $key; ?>"><?php echo $value; ?></option>
-                                <?php endforeach; ?>
+                                <option value="F">Finished Good (Barang Jadi)</option>
+                                <option value="B">Bahan Baku (Raw Material)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="harga_pokok">Harga Pokok * (Cth: 120000)</label>
-                            <input type="text" id="harga_pokok" name="harga_pokok" required inputmode="numeric">
+                            <label for="harga_pokok">Harga Pokok *</label>
+                            <input type="number" id="harga_pokok" name="harga_pokok" required step="0.01">
                         </div>
                         <div class="form-group">
-                            <label for="stok">Stok Awal * (Hanya saat tambah)</label>
+                            <label for="stok">Stok Awal *</label>
                             <input type="number" id="stok" name="stok" required>
                         </div>
                     </div>
@@ -177,7 +156,7 @@ $jenis_barang_options = [
                         <label for="status">Status</label>
                         <select id="status" name="status">
                             <option value="aktif">Aktif</option>
-                            <option value="tidak_aktif">Non-Aktif</option>
+                            <option value="tidak_aktif">Tidak Aktif</option>
                         </select>
                     </div>
 
@@ -190,25 +169,23 @@ $jenis_barang_options = [
         </div>
 
         <script>
-            const API_URL = '../model/barang.php'; 
-            let currentFilter = 'aktif';
-
+            // Load data on page load
             document.addEventListener('DOMContentLoaded', () => {
-                // Set initial active button
-                document.getElementById('btnBarangAktif').classList.add('active'); 
                 loadStats();
-                loadBarang(currentFilter);
+                loadBarang();
                 loadSatuan();
             });
 
+            // Load statistics
             async function loadStats() {
                 try {
-                    const response = await fetch(API_URL + '?action=get_stats');
+                    // Panggil API di model/barang.php
+                    const response = await fetch('../model/barang.php?action=get_stats');
                     const result = await response.json();
 
                     if (result.success) {
                         document.getElementById('totalBarang').textContent = result.data.total_barang;
-                        document.getElementById('totalStok').textContent = new Intl.NumberFormat('id-ID').format(result.data.total_stok || 0);
+                        document.getElementById('totalStok').textContent = result.data.total_stok || 0;
                         document.getElementById('totalNilai').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(result.data.total_nilai || 0);
                     }
                 } catch (error) {
@@ -216,24 +193,15 @@ $jenis_barang_options = [
                 }
             }
 
-            async function loadBarang(filter) {
-                currentFilter = filter;
-                const url = `${API_URL}?filter=${filter}`;
-                const tbody = document.getElementById('tableBody');
-                
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Loading...</td></tr>';
-                
-                // Update tampilan tombol filter
-                document.getElementById('btnBarangAktif').classList.remove('active');
-                document.getElementById('btnSemuaBarang').classList.remove('active');
-                if (filter === 'aktif') {
-                    document.getElementById('btnBarangAktif').classList.add('active');
-                } else {
-                    document.getElementById('btnSemuaBarang').classList.add('active');
-                }
+            // Load barang list
+            async function loadBarang() {
+                const filter = document.getElementById('btnFilterAktif').dataset.filter;
+                const url = `../model/barang.php?filter=${filter}`;
 
                 try {
                     const response = await fetch(url);
+
+                    // Menangani error otentikasi (sesi berakhir)
                     if (response.status === 401) {
                         alert('Sesi Anda telah berakhir. Anda akan diarahkan ke halaman login.');
                         window.location.href = '../view/login.php';
@@ -241,6 +209,8 @@ $jenis_barang_options = [
                     }
 
                     const result = await response.json();
+
+                    const tbody = document.getElementById('tableBody');
 
                     if (result.success && result.data.length > 0) {
                         tbody.innerHTML = result.data.map(item => `
@@ -250,7 +220,7 @@ $jenis_barang_options = [
                             <td>${item.nama_satuan || '-'}</td>
                             <td>${item.jenis_barang || '-'}</td>
                             <td>Rp ${new Intl.NumberFormat('id-ID').format(item.harga_pokok)}</td>
-                            <td>${new Intl.NumberFormat('id-ID').format(item.stok)}</td>
+                            <td>${item.stok}</td>
                             <td><span class="badge ${item.status === 'aktif' ? 'badge-success' : 'badge-danger'}">${item.status}</span></td>
                             <td class="action-buttons">
                                 <button class="btn btn-primary btn-sm" onclick="editBarang('${item.idbarang}')">Edit</button>
@@ -259,27 +229,30 @@ $jenis_barang_options = [
                         </tr>
                     `).join('');
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Tidak ada data barang yang sesuai dengan filter.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Tidak ada data</td></tr>';
                     }
                 } catch (error) {
                     console.error('Error loading barang:', error);
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Gagal memuat data. Periksa konsol.</td></tr>';
                 }
             }
 
-            // Event Listeners untuk tombol filter
-            document.getElementById('btnBarangAktif').addEventListener('click', () => {
-                loadBarang('aktif');
-            });
-
-            document.getElementById('btnSemuaBarang').addEventListener('click', () => {
-                loadBarang('semua');
+            // Toggle filter button
+            document.getElementById('btnFilterAktif').addEventListener('click', function() {
+                const currentFilter = this.dataset.filter;
+                if (currentFilter === 'semua') {
+                    this.dataset.filter = 'aktif';
+                    this.textContent = 'Tampilkan Semua';
+                } else {
+                    this.dataset.filter = 'semua';
+                    this.textContent = 'Tampilkan Aktif Saja';
+                }
+                loadBarang();
             });
 
             // Load satuan for dropdown
             async function loadSatuan() {
                 try {
-                    const response = await fetch(API_URL + '?action=get_satuan');
+                    const response = await fetch('../model/barang.php?action=get_satuan');
                     const result = await response.json();
 
                     if (result.success) {
@@ -297,18 +270,16 @@ $jenis_barang_options = [
                 document.getElementById('modalTitle').textContent = 'Tambah Barang';
                 document.getElementById('formBarang').reset();
                 document.getElementById('idbarang').value = '';
-                document.getElementById('formMethod').value = 'POST';
+                document.getElementById('formMethod').value = '';
                 document.getElementById('kodeBarangDisplay').style.display = 'none'; // Sembunyikan kode barang saat tambah
                 document.getElementById('stok').readOnly = false; // Stok bisa diisi saat tambah
-                document.getElementById('stok').required = true;
-                document.getElementById('status').value = 'aktif'; // Default aktif
                 document.getElementById('modalForm').classList.add('show');
             });
 
             // Edit barang
             async function editBarang(id) {
                 try {
-                    const response = await fetch(`${API_URL}?id=${id}`);
+                    const response = await fetch(`../model/barang.php?id=${id}`);
                     const result = await response.json();
 
                     if (result.success) {
@@ -316,14 +287,13 @@ $jenis_barang_options = [
                         document.getElementById('modalTitle').textContent = 'Edit Barang';
                         document.getElementById('idbarang').value = data.idbarang;
                         document.getElementById('formMethod').value = 'PUT';
-                        document.getElementById('kode_barang').value = data.idbarang; // Menggunakan idbarang sebagai kode
+                        document.getElementById('kode_barang').value = data.kode_barang;
                         document.getElementById('nama_barang').value = data.nama_barang;
                         document.getElementById('idsatuan').value = data.idsatuan;
-                        document.getElementById('jenis_barang').value = data.jenis_barang; // Kode J/B
+                        document.getElementById('jenis_barang').value = data.jenis_barang;
                         document.getElementById('harga_pokok').value = data.harga_pokok;
                         document.getElementById('stok').value = data.stok || 0;
                         document.getElementById('stok').readOnly = true; // Stok tidak bisa diedit di master data
-                        document.getElementById('stok').required = false; // Non-aktifkan required saat edit
                         document.getElementById('status').value = data.status;
 
                         document.getElementById('kodeBarangDisplay').style.display = 'block'; // Tampilkan kode barang saat edit
@@ -336,14 +306,14 @@ $jenis_barang_options = [
 
             // Delete barang (Soft Delete)
             async function deleteBarang(id, nama) {
-                if (!confirm(`Apakah Anda yakin ingin MENONAKTIFKAN barang "${nama}"? (Status akan diubah menjadi Non-Aktif)`)) return;
+                if (!confirm(`Apakah Anda yakin ingin MENONAKTIFKAN barang "${nama}"? (Soft Delete)`)) return;
 
                 try {
                     const formData = new FormData();
                     formData.append('_method', 'DELETE');
                     formData.append('idbarang', id);
 
-                    const response = await fetch(API_URL, {
+                    const response = await fetch('../model/barang.php', {
                         method: 'POST',
                         body: formData
                     });
@@ -352,7 +322,7 @@ $jenis_barang_options = [
                     alert(result.message);
 
                     if (result.success) {
-                        loadBarang(currentFilter);
+                        loadBarang();
                         loadStats();
                     }
                 } catch (error) {
@@ -367,7 +337,7 @@ $jenis_barang_options = [
                 const formData = new FormData(e.target);
 
                 try {
-                    const response = await fetch(API_URL, {
+                    const response = await fetch('../model/barang.php', {
                         method: 'POST',
                         body: formData
                     });
@@ -377,7 +347,7 @@ $jenis_barang_options = [
 
                     if (result.success) {
                         closeModal();
-                        loadBarang(currentFilter);
+                        loadBarang();
                         loadStats();
                     }
                 } catch (error) {
@@ -385,12 +355,15 @@ $jenis_barang_options = [
                 }
             });
 
+            // Close modal
             function closeModal() {
                 document.getElementById('modalForm').classList.remove('show');
             }
 
+            // Refresh button
             document.getElementById('btnRefresh').addEventListener('click', () => {
-                loadBarang(currentFilter);
+                // Memanggil kedua fungsi untuk memuat ulang data statistik dan tabel barang
+                loadBarang();
                 loadStats();
             });
 
