@@ -100,8 +100,8 @@ function handleGet($dbconn) {
             $res = $dbconn->query($sql);
             $list = $res->fetch_all(MYSQLI_ASSOC);
 
-            // Urutkan DESC created_at di PHP
-            usort($list, fn($a,$b) => strtotime($b['created_at']) - strtotime($a['created_at']));
+            // Urutkan DESC idpenjualan di PHP
+            usort($list, fn($a,$b) => $b['idpenjualan'] - $a['idpenjualan']);
 
             echo json_encode(['success' => true, 'data' => $list]);
         } catch (Exception $e) {

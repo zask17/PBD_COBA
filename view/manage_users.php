@@ -45,8 +45,8 @@ checkAuth();
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Pengguna</h2>
-                    <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
-                    <button id="btnTambah" class="btn btn-primary"><span>+</span> Tambah User</button>
+                    <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
+                    <button id="btnTambah" class="btn btn-primary"><span>+ Tambah User</span></button>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

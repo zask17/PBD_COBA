@@ -148,7 +148,7 @@ function handleGet($dbconn) {
                     FROM penerimaan pr
                     JOIN user u ON pr.iduser = u.iduser
                     JOIN pengadaan p ON pr.idpengadaan = p.idpengadaan
-                    ORDER BY pr.created_at DESC";
+                    ORDER BY pr.idpenerimaan DESC";
             
             $result = $dbconn->query($sql);
             

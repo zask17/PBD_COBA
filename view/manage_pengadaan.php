@@ -76,7 +76,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
         }
 
         .modal-content {
-            background-color: #1e242d;
+            background-color: #ffffff;
             margin: 10% auto;
             padding: 0;
             border: 1px solid #3a4254;
@@ -95,7 +95,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
 
         .modal-header h3 {
             margin: 0;
-            color: #e4e6eb;
+            color: #333333;
         }
 
         .modal-header .close {
@@ -260,7 +260,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
                 <button class="close" onclick="closeDetailModal()">&times;</button>
             </div>
             <div class="modal-body" style="padding: 28px;">
-                <div class="form-row" style="margin-bottom: 20px; background: #191f2c; padding: 16px; border-radius: 8px;">
+                <div class="form-row" style="margin-bottom: 20px; background: #f7f7f7; padding: 16px; border-radius: 8px;">
                     <div class="form-group"><label>ID Pengadaan:</label>
                         <p id="detailIdPO" class="modal-info"></p>
                     </div>

@@ -226,7 +226,7 @@ function handleGetActiveStock($dbconn) {
             FROM 
                 V_BARANG_AKTIF b
             ORDER BY 
-                b.`NAMA BARANG` ASC
+                b.`KODE BARANG` ASC
         ";
         
         $result = $dbconn->query($query);

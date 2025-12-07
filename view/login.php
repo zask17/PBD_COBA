@@ -112,6 +112,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
         <p style="margin-top: 20px; font-size: 14px;"><a href="../html/index.html" style="color: #555;">Kembali ke Halaman Awal</a></p>
     </div>
-    <?php include 'footer.php'; ?>
+
 </body>
 </html>

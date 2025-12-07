@@ -291,7 +291,7 @@ async function loadSalesList() {
             listBody.innerHTML = result.data.map(sale => `
                 <tr>
                     <td>TX-${sale.idpenjualan}</td>
-                    <td>${new Date(sale.created_at).toLocaleString('id-ID')}</td>
+                    <td>${new Date(sale.created_at).toLocaleDateString('id-ID')}</td>
                     <td>${sale.username}</td>
                     <td>${sale.margin_persen}%</td>
                     <td>${formatRupiah(sale.total_nilai)}</td>
@@ -460,7 +460,7 @@ async function viewSaleDetails(id) {
 
             // Set Header Details
             document.getElementById('detail-id').textContent = `TX-${header.idpenjualan}`;
-            document.getElementById('detail-tanggal').textContent = new Date(header.created_at).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' });
+            document.getElementById('detail-tanggal').textContent = new Date(header.created_at).toLocaleDateString('id-ID');
             document.getElementById('detail-kasir').textContent = header.kasir;
             document.getElementById('detail-margin').textContent = `${header.margin_persen}%`;
             document.getElementById('detail-total').textContent = formatRupiah(header.total_nilai);

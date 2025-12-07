@@ -53,7 +53,7 @@ checkAuth();
                 <h2>Daftar Role</h2>
                 <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
                 <button id="btnTambah" class="btn btn-primary">
-                    <span>Tambah Role</span>
+                    <span>+ Tambah Role</span>
                 </button>
             </div>
 
