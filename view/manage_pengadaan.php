@@ -403,7 +403,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
                 case 'Diterima Penuh':
                     return `<span class="badge badge-success">Diterima Penuh</span>`;
                 case 'Parsial':
-                    return `<span class="badge badge-warning">Parsial</span>`;
+                    return `<span class="badge badge-warning">Sebagian</span>`;
                 case 'Dipesan':
                     return `<span class="badge badge-info">Dipesan (Proses)</span>`;
                 default:

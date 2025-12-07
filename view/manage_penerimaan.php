@@ -259,15 +259,15 @@ async function loadPenerimaan() {
 
     if (result.success && result.data.length > 0) {
         tbody.innerHTML = result.data.map(p => {
-            // Menggunakan badge style dari pengadaan.css
+            // Status PO dari pengadaan
             const statusMap = {
-                'P': { text: 'Proses', class: 'badge-info' }, 
-                'S': { text: 'Sebagian', class: 'badge-warning' }, 
-                'F': { text: 'Selesai', class: 'badge-success' },
-                'C': { text: 'Batal', class: 'badge-secondary' }
+                'p': { text: 'Dipesan', class: 'badge-info' }, 
+                's': { text: 'Sebagian', class: 'badge-warning' }, 
+                'f': { text: 'Selesai', class: 'badge-success' },
+                'c': { text: 'Batal', class: 'badge-secondary' }
             };
-            const statusInfo = statusMap[p.status] || { text: p.status, class: 'badge-secondary' };
-            const tanggal = new Date(p.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            const statusInfo = statusMap[p.po_status] || { text: p.po_status, class: 'badge-secondary' };
+            const tanggal = new Date(p.created_at).toLocaleDateString('id-ID');
 
             return `
                 <tr>

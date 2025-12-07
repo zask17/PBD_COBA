@@ -144,10 +144,10 @@ function handleGet($dbconn) {
                         pr.idpengadaan,
                         pr.created_at,
                         u.username,
-                        pr.status
+                        p.status as po_status
                     FROM penerimaan pr
                     JOIN user u ON pr.iduser = u.iduser
-                    -- ORDER BY di backend
+                    JOIN pengadaan p ON pr.idpengadaan = p.idpengadaan
                     ORDER BY pr.created_at DESC";
             
             $result = $dbconn->query($sql);
