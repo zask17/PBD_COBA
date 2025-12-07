@@ -1,49 +1,72 @@
-/* Variabel Warna Tema Hijau */
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+
+/* CSS Variables - Green Theme */
 :root {
-    --primary-green: #1A5319; /* Hijau Tua */
-    --accent-green: #689F38;  /* Hijau Aksen/Muda */
+    --primary-green: #1A5319;
+    --accent-green: #689F38;
     --background-light: #F7F7F7;
-    --background-section: #E8F5E9; /* Hijau Sangat Pucat */
+    --background-section: #E8F5E9;
     --text-color-dark: #333333;
+    --text-medium: #666666;
+    --text-light: #888888;
+    --border-color: #eeeeee;
+    --border-light: #f0f0f0;
     --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius-default: 12px;
+    --radius-small: 6px;
 }
 
-/* Base Style */
+/* Base Styles */
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--background-light);
     color: var(--text-color-dark);
     line-height: 1.6;
 }
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
+
 section {
     padding: 80px 0;
 }
-h1, h2, h3 {
+
+h1,
+h2,
+h3 {
     color: var(--primary-green);
     margin-bottom: 20px;
 }
+
 a {
     text-decoration: none;
     color: var(--primary-green);
 }
 
-/* --- HEADER --- */
+
+/* ============================================================================
+   HEADER STYLES
+   ============================================================================ */
+
 header {
     background-color: var(--primary-green);
     color: white;
     padding: 15px 0;
     box-shadow: var(--shadow-light);
 }
+
 .header-content {
     display: flex;
     justify-content: space-between;
@@ -52,46 +75,69 @@ header {
     margin: 0 auto;
     padding: 0 20px;
 }
+
 .header-left {
     display: flex;
     align-items: center;
 }
+
 .logo svg {
     margin-right: 10px;
     color: white;
 }
+
 .header-title h1 {
     font-size: 24px;
     margin: 0;
     color: white;
 }
 
-/* --- BUTTONS --- */
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
 .btn {
     padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: var(--radius-small);
     font-weight: 600;
     transition: all 0.3s ease;
     text-align: center;
+    border: 2px solid transparent;
 }
+
 .btn-primary {
     background-color: var(--accent-green);
     color: white;
-    border: 2px solid var(--accent-green);
+    border-color: var(--accent-green);
 }
+
 .btn-primary:hover {
-    background-color: #558B2F; /* Sedikit lebih gelap */
+    background-color: #558B2F;
     border-color: #558B2F;
 }
+
 .btn-outline {
     background-color: transparent;
     color: var(--primary-green);
-    border: 2px solid var(--primary-green);
+    border-color: var(--primary-green);
 }
+
 .btn-outline:hover {
     background-color: var(--primary-green);
     color: white;
 }
+
+.btn-danger {
+    background-color: #D32F2F;
+    color: white;
+    border-color: #D32F2F;
+}
+
+.btn-danger:hover {
+    background-color: #B71C1C;
+    border-color: #B71C1C;
+}
+
 .button-group {
     margin-top: 30px;
     display: flex;
@@ -99,16 +145,21 @@ header {
 }
 
 
-/* --- HERO SECTION --- */
+/* ============================================================================
+   HERO SECTION
+   ============================================================================ */
+
 .landing-hero {
     background: linear-gradient(135deg, var(--background-light) 0%, var(--background-section) 100%);
     padding: 100px 0;
     text-align: center;
 }
+
 .landing-hero h1 {
     font-size: 44px;
     font-weight: 800;
 }
+
 .landing-hero p {
     font-size: 18px;
     max-width: 700px;
@@ -116,49 +167,61 @@ header {
     color: #555;
 }
 
+/* ============================================================================
+   FEATURES SECTION
+   ============================================================================ */
 
-/* --- FEATURES SECTION --- */
 #features {
     text-align: center;
     background-color: white;
 }
+
 #features h2 {
     font-size: 36px;
     margin-bottom: 50px;
 }
+
 .features {
     display: flex;
     gap: 30px;
     justify-content: center;
+    flex-wrap: wrap;
 }
+
 .feature-card {
     background: var(--background-section);
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-default);
+    box-shadow: var(--shadow-card);
     flex: 1;
     max-width: 350px;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 .feature-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
+
 .feature-icon {
     font-size: 40px;
     margin-bottom: 20px;
 }
+
 .feature-card h3 {
     font-size: 22px;
     color: var(--accent-green);
 }
+
 .feature-card p {
     font-size: 15px;
     color: #555;
 }
 
+/* ============================================================================
+   CTA SECTION (Call to Action)
+   ============================================================================ */
 
-/* --- CTA SECTION (Call to Action) --- */
 .cta-section {
     padding: 60px 20px;
     text-align: center;
@@ -166,42 +229,52 @@ header {
     color: white;
     margin: 40px 0;
 }
+
 .cta-content svg {
     color: var(--accent-green);
 }
+
 .cta-content h2 {
     color: white;
     font-size: 32px;
     margin-bottom: 15px;
 }
+
 .cta-content p {
     font-size: 18px;
     margin-bottom: 30px;
     opacity: 0.95;
 }
+
 .cta-btn {
     background: white;
     color: var(--primary-green);
     font-weight: 700;
     padding: 12px 30px;
 }
+
 .cta-btn:hover {
     background: #E0E0E0;
     color: var(--primary-green);
 }
 
 
-/* --- FOOTER --- */
+/* ============================================================================
+   FOOTER STYLES
+   ============================================================================ */
+
 .footer {
     background-color: var(--primary-green);
     color: white;
     padding: 40px 0 20px;
 }
+
 .footer-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
 }
+
 .footer-content {
     display: flex;
     justify-content: space-between;
@@ -209,124 +282,235 @@ header {
     padding-bottom: 20px;
     margin-bottom: 20px;
 }
+
 .footer-section {
     flex: 1;
     padding-right: 30px;
 }
+
 .footer-section h4 {
     font-size: 18px;
     margin-bottom: 15px;
     color: var(--accent-green);
 }
-.footer-section p, .footer-section ul li {
+
+.footer-section p,
+.footer-section ul li {
     font-size: 14px;
     opacity: 0.8;
 }
+
 .footer-section ul {
     list-style: none;
 }
+
 .footer-section ul li a {
     color: white;
     opacity: 0.9;
+    transition: opacity 0.3s ease;
 }
+
 .footer-section ul li a:hover {
     text-decoration: underline;
+    opacity: 1;
 }
+
 .footer-bottom {
     text-align: center;
     font-size: 12px;
     opacity: 0.7;
 }
 
-/* ---------------------------------------------------------------------- */
-/* --- LOGIN PAGE STYLES (Dipakai oleh login.php) --- */
-/* ---------------------------------------------------------------------- */
+/* ============================================================================
+   LOGIN PAGE STYLES
+   ============================================================================ */
+
 .login-body {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-color: var(--background-light); /* Override background jika perlu */
+    background-color: var(--background-light);
 }
+
 .login-container {
     background: white;
     padding: 40px;
-    border-radius: 12px;
+    border-radius: var(--radius-default);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     width: 380px;
     text-align: center;
     transition: transform 0.3s ease;
 }
+
 .login-container:hover {
     transform: translateY(-3px);
 }
+
 .login-container h2 {
     color: var(--primary-green);
     margin-bottom: 25px;
     font-size: 28px;
 }
+
 .login-container input {
     width: 100%;
     padding: 14px;
     margin-bottom: 20px;
     border: 1px solid #ddd;
-    border-radius: 6px;
+    border-radius: var(--radius-small);
     box-sizing: border-box;
     font-size: 16px;
+    transition: border-color 0.3s ease;
 }
+
+.login-container input:focus {
+    outline: none;
+    border-color: var(--primary-green);
+}
+
 .login-container button {
     background-color: var(--primary-green);
     color: white;
     padding: 14px 25px;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-small);
     cursor: pointer;
     width: 100%;
     font-size: 17px;
     font-weight: bold;
     transition: background-color 0.3s;
 }
+
 .login-container button:hover {
     background-color: var(--accent-green);
 }
+
 .error-message {
-    color: #D32F2F; 
+    color: #D32F2F;
     background-color: #FFEBEE;
     padding: 10px;
-    border-radius: 4px;
+    border-radius: var(--radius-small);
     margin-bottom: 20px;
     border: 1px solid #EF9A9A;
     text-align: left;
     font-size: 14px;
 }
 
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .header-title h1 {
         font-size: 20px;
     }
+
     .landing-hero h1 {
         font-size: 32px;
     }
-    .features, .footer-content {
+
+    .features,
+    .footer-content {
         flex-direction: column;
     }
+
     .feature-card {
         margin-bottom: 20px;
         max-width: 100%;
     }
+
     .footer-section {
         padding-right: 0;
         margin-bottom: 20px;
     }
+
     .button-group {
         flex-direction: column;
         align-items: center;
     }
+
     .btn {
         width: 100%;
         max-width: 300px;
     }
+
+    .login-container {
+        width: 90%;
+        max-width: 380px;
+    }
+}
+
+/* ============================================================================
+   FOOTER STYLES
+   ============================================================================ */
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+    background-color: var(--primary-green);
+    color: #fff;
+    padding: 40px 20px 20px;
+    border-top: 3px solid var(--accent-green);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-section h4 {
+    color: var(--accent-green);
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.footer-section p {
+    font-size: 14px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 8px;
+}
+
+.footer-section ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: var(--accent-green);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    opacity: 0.85;
 }

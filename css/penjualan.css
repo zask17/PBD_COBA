@@ -1,38 +1,10 @@
-.transaction-form .card-body {
-    padding: 0;
-}
+/* ============================================================================
+   PENJUALAN (SALES) CSS - Clean & Organized
+   ============================================================================ */
 
-.form-header,
-.form-footer {
-    padding: 28px;
-}
-
-.form-header {
-    border-bottom: 1px solid #2a3142;
-}
-
-.form-footer {
-    border-top: 1px solid #2a3142;
-}
-
-#item-list-table th,
-#item-list-table td {
-    padding: 16px 28px;
-}
-
-#item-list-table input {
-    background: #0f1419;
-    border-color: #3a4254;
-    padding: 8px;
-    text-align: right;
-    color: #e4e6eb;
-}
-
-.total-section {
-    text-align: right;
-    font-size: 1.5rem;
-    font-weight: 700;
-}
+/* ============================================================================
+   CARD & LAYOUT
+   ============================================================================ */
 
 .card {
     background: #FFFFFF;
@@ -65,7 +37,10 @@
     padding: 0;
 }
 
-/* Form Layout */
+/* ============================================================================
+   FORM LAYOUT
+   ============================================================================ */
+
 .form-row {
     display: flex;
     gap: 20px;
@@ -78,7 +53,6 @@
     flex-direction: column;
 }
 
-/* Form Header & Footer */
 .form-header,
 .form-footer {
     padding: 20px;
@@ -98,7 +72,7 @@
     border-top: 1px solid #eee;
 }
 
-.form-footer>div:last-child {
+.form-footer > div:last-child {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -106,12 +80,10 @@
     margin-top: 20px;
 }
 
+/* ============================================================================
+   FORM ELEMENTS
+   ============================================================================ */
 
-/* ========================================
-   3. FORM ELEMENTS
-   ======================================== */
-
-/* Labels */
 .form-group label,
 .modal-body label {
     display: block;
@@ -125,7 +97,6 @@
     color: #666;
 }
 
-/* Inputs & Selects */
 .form-group input[type="text"],
 .form-group input[type="date"],
 .form-group input[type="number"],
@@ -151,20 +122,17 @@
     text-align: center;
 }
 
+/* ============================================================================
+   TABLES
+   ============================================================================ */
 
-/* ========================================
-   4. TABLES
-   ======================================== */
-
-/* Table Container */
 .table-responsive {
     overflow-x: auto;
 }
 
-/* Item List Tables */
 #item-list-table,
 #detail-item-list-table,
-#tablePengadaan {
+#tablePenjualan {
     width: 100%;
     border-collapse: collapse;
 }
@@ -174,13 +142,12 @@
     margin-bottom: 20px;
 }
 
-/* Table Headers */
 #item-list-table th,
 #item-list-table td,
 #detail-item-list-table th,
 #detail-item-list-table td,
-#tablePengadaan th,
-#tablePengadaan td {
+#tablePenjualan th,
+#tablePenjualan td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
@@ -188,7 +155,7 @@
 
 #item-list-table th,
 #detail-item-list-table th,
-#tablePengadaan thead th {
+#tablePenjualan thead th {
     background-color: #f7f7f7;
     color: #333;
     font-weight: 700;
@@ -196,30 +163,26 @@
     font-size: 0.85rem;
 }
 
-/* Table Body */
 #item-list-table tbody tr,
 #detail-item-list-table tbody tr,
-#tablePengadaan tbody tr {
+#tablePenjualan tbody tr {
     transition: background-color 0.2s ease;
 }
 
-#tablePengadaan tbody tr:hover {
+#tablePenjualan tbody tr:hover {
     background-color: #f9f9f9;
     cursor: pointer;
 }
 
-/* Item Quantity Input */
 #item-list-table .item-qty {
     width: 100%;
     max-width: 80px;
 }
 
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
 
-/* ========================================
-   5. BUTTONS
-   ======================================== */
-
-/* Button Base */
 .btn {
     padding: 10px 20px;
     border-radius: 6px;
@@ -244,13 +207,11 @@
     transform: none;
 }
 
-/* Button Sizes */
 .btn-sm {
     padding: 5px 10px;
     font-size: 0.8rem;
 }
 
-/* Button Colors */
 .btn-primary {
     background-color: #4CAF50;
     color: white;
@@ -287,17 +248,15 @@
     background-color: #E53935;
 }
 
-/* Action Buttons Group */
 .action-buttons {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
 }
 
-
-/* ========================================
-   6. BADGES
-   ======================================== */
+/* ============================================================================
+   BADGES
+   ============================================================================ */
 
 .badge {
     display: inline-block;
@@ -333,10 +292,9 @@
     color: #757575;
 }
 
-
-/* ========================================
-   7. TOTAL SECTION
-   ======================================== */
+/* ============================================================================
+   TOTAL SECTION
+   ============================================================================ */
 
 .total-section {
     text-align: right;
@@ -354,12 +312,10 @@
     margin-top: 5px;
 }
 
+/* ============================================================================
+   MODAL
+   ============================================================================ */
 
-/* ========================================
-   8. MODAL
-   ======================================== */
-
-/* Modal Overlay */
 .modal {
     display: none;
     position: fixed;
@@ -378,7 +334,6 @@
     display: flex;
 }
 
-/* Modal Content */
 .modal-content {
     background-color: #FFFFFF;
     margin: auto;
@@ -390,7 +345,6 @@
     animation: slideDown 0.3s ease-out;
 }
 
-/* Modal Header */
 .modal-header {
     padding: 15px 20px;
     border-bottom: 1px solid #eee;
@@ -419,7 +373,6 @@
     color: #000;
 }
 
-/* Modal Body */
 .modal-body {
     padding: 20px;
 }
@@ -431,42 +384,36 @@
     margin-top: 5px;
 }
 
-
-/* ========================================
-   9. ANIMATIONS
-   ======================================== */
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
 
 @keyframes slideDown {
     from {
         opacity: 0;
         transform: translateY(-50px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-
-/* ========================================
-   10. RESPONSIVE DESIGN
-   ======================================== */
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
 
 @media (max-width: 768px) {
-
-    /* Form Layout */
     .form-row {
         flex-direction: column;
         gap: 15px;
     }
 
-    /* Buttons */
     .action-buttons {
         flex-direction: column;
     }
 
-    .form-footer>div:last-child {
+    .form-footer > div:last-child {
         flex-direction: column;
         gap: 10px;
     }
@@ -475,27 +422,23 @@
         width: 100%;
     }
 
-    /* Tables */
-    #tablePengadaan th,
-    #tablePengadaan td {
+    #tablePenjualan th,
+    #tablePenjualan td {
         padding: 8px;
         font-size: 0.85rem;
     }
 
-    /* Modal */
     .modal-content {
         width: 95%;
         margin: 10px;
     }
 
-    /* Card Header */
     .card-header {
         flex-direction: column;
         gap: 15px;
         align-items: flex-start;
     }
 
-    /* Total Section */
     .total-section {
         font-size: 1.1rem;
     }

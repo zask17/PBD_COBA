@@ -19,6 +19,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengadaan Barang (PO) - Sistem Inventory</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/pengadaan.css">
     <style>
@@ -792,6 +793,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
             }
         });
     </script>
+    <?php include 'footer.php'; ?>
 </body>
 
 </html>

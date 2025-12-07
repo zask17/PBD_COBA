@@ -1,9 +1,20 @@
+/* ============================================================================
+   KARTU STOK (STOCK CARD) MANAGEMENT STYLES
+   ============================================================================ */
 
-/* Tombol */
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
 .btn-danger {
     background-color: #D32F2F;
     color: white;
     border: 2px solid #D32F2F;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .btn-danger:hover {
@@ -11,7 +22,25 @@
     border-color: #B71C1C;
 }
 
-/* Styles untuk Card dan Table */
+.btn-edit {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.btn-edit:hover {
+    background-color: #43a047;
+}
+
+/* ============================================================================
+   CARD & TABLE STYLES
+   ============================================================================ */
+
 .card {
     background: #FFFFFF;
     border-radius: 12px;
@@ -30,7 +59,7 @@
 
 .card-header h2 {
     font-size: 1.5rem;
-    color: var(--primary-green, #4CAF50);
+    color: var(--primary-green, #1A5319);
     margin: 0;
 }
 
@@ -55,15 +84,21 @@
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
 }
 
 #tableBarang thead th,
 #tableKartuStok thead th {
-    background-color: var(--background-section, #f7f7f7);
+    background-color: var(--background-section, #E8F5E9);
     color: var(--text-color-dark, #333);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.85rem;
+}
+
+#tableBarang tbody tr,
+#tableKartuStok tbody tr {
+    transition: background-color 0.2s ease;
 }
 
 #tableBarang tbody tr:hover,
@@ -71,18 +106,24 @@
     background-color: #f9f9f9;
 }
 
-/* Text Colors untuk kolom Masuk/Keluar di Kartu Stok */
+/* ============================================================================
+   TEXT COLORS
+   ============================================================================ */
+
 .text-success {
-    color: #4CAF50; /* Hijau */
+    color: #4CAF50;
     font-weight: 600;
 }
 
 .text-danger {
-    color: #F44336; /* Merah */
+    color: #F44336;
     font-weight: 600;
 }
 
-/* Styles Modal (diambil dari role.css/barang.css) */
+/* ============================================================================
+   MODAL STYLES
+   ============================================================================ */
+
 .modal {
     display: none;
     position: fixed;
@@ -107,6 +148,7 @@
     padding: 0;
     border-radius: 10px;
     width: 90%;
+    max-width: 600px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     animation: slideDown 0.3s ease-out;
 }
@@ -121,7 +163,8 @@
 
 .modal-header h3 {
     margin: 0;
-    color: var(--primary-green, #4CAF50);
+    color: var(--primary-green, #1A5319);
+    font-size: 1.3rem;
 }
 
 .modal-header .close {
@@ -131,13 +174,99 @@
     border: none;
     background: none;
     cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.modal-header .close:hover {
+    color: #333;
 }
 
 .modal-body {
     padding: 20px;
 }
 
+/* ============================================================================
+   FORM STYLES
+   ============================================================================ */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-green, #1A5319);
+}
+
+.form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    margin-top: 20px;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-50px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 100%;
+    }
+
+    #tableBarang th,
+    #tableBarang td,
+    #tableKartuStok th,
+    #tableKartuStok td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
 }

@@ -11,6 +11,7 @@ checkAuth();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen User & Role - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/user.css">
 </head>
@@ -68,12 +69,6 @@ checkAuth();
                 </div>
             </div>
         </div>
-
-        <footer>
-            <!-- <p>Sistem Manajemen Inventory PBD © 2025</p> -->
-             <?php include 'footer.php' ?>
-        </footer>
-    </div>
 
     <div id="modalForm" class="modal">
         <div class="modal-content" style="max-width: 500px;">
@@ -247,5 +242,6 @@ checkAuth();
             }
         }
     </script>
+    <?php include 'footer.php'; ?>
 </body>
 </html>

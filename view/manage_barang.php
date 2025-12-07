@@ -23,6 +23,7 @@ $jenis_barang_options = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Barang - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/barang.css">
     <style>
@@ -117,10 +118,6 @@ $jenis_barang_options = [
                     </div>
                 </div>
             </div>
-
-            <footer>
-                <p>Sistem Manajemen Inventory PBD © 2025</p>
-            </footer>
         </div>
 
         <div id="modalForm" class="modal">
@@ -436,6 +433,7 @@ $jenis_barang_options = [
             }
         </script>
 
+    <?php include 'footer.php'; ?>
 </body>
 
 </html>

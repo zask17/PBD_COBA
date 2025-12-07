@@ -1,33 +1,12 @@
-/* Card dan Tabel */
-.card {
-    background: #FFFFFF;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    margin-bottom: 30px;
-    overflow: hidden;
-}
+/* ============================================================================
+   VENDOR MANAGEMENT STYLES
+   ============================================================================ */
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-}
+/* Import common styles - use in HTML: <link rel="stylesheet" href="css/common.css"> */
 
-.card-header h2 {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin: 0;
-}
-
-.card-body {
-    padding: 0;
-}
-
-.table-responsive {
-    overflow-x: auto;
-}
+/* ============================================================================
+   SPECIFIC STYLES FOR VENDOR PAGE
+   ============================================================================ */
 
 #tableVendor {
     width: 100%;
@@ -39,46 +18,30 @@
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
 }
 
 #tableVendor thead th {
-    background-color: #f7f7f7;
-    color: var(--text-color-dark);
+    background-color: var(--background-section, #E8F5E9);
+    color: var(--text-color-dark, #333);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.85rem;
     white-space: nowrap;
 }
 
+#tableVendor tbody tr {
+    transition: background-color 0.2s ease;
+}
+
 #tableVendor tbody tr:hover {
     background-color: #f9f9f9;
 }
 
-/* Badges */
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: capitalize;
-}
+/* ============================================================================
+   STATS GRID
+   ============================================================================ */
 
-.badge-success {
-    background-color: #E8F5E9;
-    color: #4CAF50;
-}
-
-.badge-danger {
-    background-color: #FFEBEE;
-    color: var(--danger-color);
-}
-
-.action-buttons button {
-    margin-right: 5px;
-}
-
-/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -87,128 +50,52 @@
 }
 
 .stat-card {
-    background: var(--text-color-light);
+    background: #FFFFFF;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid var(--primary-green, #1A5319);
 }
 
 .stat-card h3 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #777;
-    margin-top: 0;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .stat-card .value {
     font-size: 2rem;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal.show {
-    display: flex;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: auto;
-    padding: 0;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    animation: slideDown 0.3s ease-out;
-}
-
-.modal-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h3 {
+    font-weight: 700;
+    color: var(--primary-green, #1A5319);
     margin: 0;
-    color: var(--primary-color);
 }
 
-.modal-header .close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    border: none;
-    background: none;
-    cursor: pointer;
+/* ============================================================================
+   ACTION BUTTONS
+   ============================================================================ */
+
+.action-buttons button {
+    margin-right: 5px;
 }
 
 #formVendor {
-    padding: 20px;
+    padding: 0;
 }
 
-.form-group {
-    margin-bottom: 15px;
-}
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
 
-.form-row {
-    display: flex;
-    gap: 20px;
-}
-
-.form-row .form-group {
-    flex: 1;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: #444;
-    font-size: 0.9rem;
-}
-
-input[type="text"],
-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-sizing: border-box;
-    font-size: 1rem;
-}
-
-.form-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-    margin-top: 20px;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-50px);
+@media (max-width: 768px) {
+    #tableVendor th,
+    #tableVendor td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }

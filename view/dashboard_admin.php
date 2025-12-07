@@ -101,10 +101,7 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
 
         </div>
     </div>
-
-    <?php 
-    include 'footer.php';
-    ?>
+    <?php include 'footer.php'; ?>
 </body>
 
 </html>

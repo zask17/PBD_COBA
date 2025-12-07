@@ -124,6 +124,7 @@ $can_access_full_data_master = true;
             </div>
         </div>
     </div>
+    <?php include 'footer.php'; ?>
 </body>
 
 </html>

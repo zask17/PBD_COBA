@@ -19,6 +19,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Vendor - Sistem Inventory PBD</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/vendor.css">
     <style>
@@ -103,10 +104,6 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     </div>
                 </div>
             </div>
-
-            <footer>
-                <p>Sistem Manajemen Inventory PBD © 2025</p>
-            </footer>
         </div>
 
         <div id="modalForm" class="modal">
@@ -326,5 +323,6 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
         </script>
 
 </body>
+    <?php include 'footer.php'; ?>
 
 </html>

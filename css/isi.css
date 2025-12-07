@@ -1,4 +1,11 @@
-/* Styles untuk Card dan Table */ 
+/* ============================================================================
+   COMMON STYLES FOR MANAGEMENT PAGES (Roles, Users, etc.)
+   ============================================================================ */
+
+/* ============================================================================
+   CARD & TABLE STYLES
+   ============================================================================ */
+
 .card {
     background: #FFFFFF;
     border-radius: 12px;
@@ -17,7 +24,7 @@
 
 .card-header h2 {
     font-size: 1.5rem;
-    color: var(--primary-green, #4CAF50);
+    color: var(--primary-green, #1A5319);
     margin: 0;
 }
 
@@ -25,53 +32,84 @@
     padding: 0;
 }
 
-/* Table Container */
+/* ============================================================================
+   TABLE STYLES
+   ============================================================================ */
+
 .table-responsive {
     width: 100%;
     overflow-x: auto;
 }
 
-/* Tabel */
-#tableRoles {
+#tableRoles,
+#tableUsers,
+#tableSatuan,
+#tableVendor {
     width: 100%;
     border-collapse: collapse;
     table-layout: auto;
 }
 
 #tableRoles th,
-#tableRoles td {
+#tableRoles td,
+#tableUsers th,
+#tableUsers td,
+#tableSatuan th,
+#tableSatuan td,
+#tableVendor th,
+#tableVendor td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #f0f0f0;
     font-size: 0.95rem;
 }
 
-#tableRoles thead th {
-    background-color: var(--background-section, #f7f7f7);
+#tableRoles thead th,
+#tableUsers thead th,
+#tableSatuan thead th,
+#tableVendor thead th {
+    background-color: var(--background-section, #E8F5E9);
     color: var(--text-color-dark, #333);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.85rem;
 }
 
-#tableRoles tbody tr:hover {
+#tableRoles tbody tr,
+#tableUsers tbody tr,
+#tableSatuan tbody tr,
+#tableVendor tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+#tableRoles tbody tr:hover,
+#tableUsers tbody tr:hover,
+#tableSatuan tbody tr:hover,
+#tableVendor tbody tr:hover {
     background-color: #f9f9f9;
 }
 
-/* Kolom Aksi agar tombol sejajar */
-#tableRoles td.aksi {
+/* Action Column */
+#tableRoles td.aksi,
+#tableUsers td.aksi,
+#tableSatuan td.aksi,
+#tableVendor td.aksi {
     display: flex;
     gap: 10px;
     align-items: center;
 }
 
-/* Jika ingin kolom aksi lebarnya tetap */
 #tableRoles th.aksi,
-#tableRoles td.aksi {
-    width: 200px; 
+#tableRoles td.aksi,
+#tableUsers th.aksi,
+#tableUsers td.aksi {
+    width: 200px;
 }
 
-/* Tombol */
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
 .btn-edit {
     background-color: #4CAF50;
     color: white;
@@ -80,6 +118,12 @@
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.btn-edit:hover {
+    background-color: #43a047;
 }
 
 .btn-delete {
@@ -90,18 +134,57 @@
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
-}
-
-/* Button Hover */
-.btn-edit:hover {
-    background-color: #43a047;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
 }
 
 .btn-delete:hover {
     background-color: #c9302c;
 }
 
-/* Modal Styles */
+.btn-danger {
+    background-color: #D32F2F;
+    color: white;
+    border: 2px solid #D32F2F;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background-color: #B71C1C;
+    border-color: #B71C1C;
+}
+
+/* ============================================================================
+   BADGES
+   ============================================================================ */
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.badge-success {
+    background-color: #E8F5E9;
+    color: #4CAF50;
+}
+
+.badge-danger {
+    background-color: #FFEBEE;
+    color: #F44336;
+}
+
+/* ============================================================================
+   MODAL STYLES
+   ============================================================================ */
+
 .modal {
     display: none;
     position: fixed;
@@ -141,7 +224,8 @@
 
 .modal-header h3 {
     margin: 0;
-    color: var(--primary-green, #4CAF50);
+    color: var(--primary-green, #1A5319);
+    font-size: 1.3rem;
 }
 
 .modal-header .close {
@@ -151,14 +235,39 @@
     border: none;
     background: none;
     cursor: pointer;
+    transition: color 0.3s ease;
 }
 
-#formRole {
+.modal-header .close:hover {
+    color: #333;
+}
+
+.modal-body {
     padding: 20px;
+}
+
+/* ============================================================================
+   FORM STYLES
+   ============================================================================ */
+
+#formRole,
+#formUser,
+#formSatuan,
+#formVendor {
+    padding: 0;
 }
 
 .form-group {
     margin-bottom: 15px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .form-group {
+    flex-grow: 1;
 }
 
 label {
@@ -171,6 +280,8 @@ label {
 
 input[type="text"],
 input[type="number"],
+input[type="email"],
+input[type="password"],
 select {
     width: 100%;
     padding: 10px;
@@ -178,6 +289,16 @@ select {
     border-radius: 6px;
     box-sizing: border-box;
     font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-green, #1A5319);
 }
 
 .form-footer {
@@ -189,125 +310,61 @@ select {
     margin-top: 20px;
 }
 
-/* Animasi modal */
+/* ============================================================================
+   TEXT COLORS
+   ============================================================================ */
+
+.text-success {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+.text-danger {
+    color: #F44336;
+    font-weight: 600;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
 @keyframes slideDown {
     from {
         opacity: 0;
         transform: translateY(-50px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
 
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 
-/* MODAL TAPI GA JADI */
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
 
-.card-header h2,
-.form-header h2 {
-    color: var(--primary-green) !important;
-}
+    .modal-content {
+        width: 95%;
+        max-width: 100%;
+    }
 
-/* Memastikan input di tabel item penerimaan memiliki lebar yang wajar */
-#item-list-table input.item-qty {
-    width: 100%;
-    max-width: 100px;
-    text-align: center;
-    border: 1px solid #ccc;
-    /* Pastikan border muncul */
-    padding: 5px;
-    border-radius: 4px;
-}
-
-
-/* Tambahkan style untuk konsistensi di modal */
-#modalDetailPengadaan .modal-body .form-group label {
-    color: #666;
-}
-
-#modalDetailPengadaan .modal-info {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    margin-top: 5px;
-}
-
-/* Sesuaikan total section di modal agar mirip manage_pengadaan.php */
-#modalDetailPengadaan .total-section .modal-total-line {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-top: 5px;
-    font-size: 1rem;
-}
-
-
-#modalDetailPengadaan .total-section .modal-total-line span:first-child {
-    width: 150px;
-    font-weight: 400;
-    color: #666;
-    text-align: right;
-}
-
-#modalDetailPengadaan .total-section .modal-total-line span:last-child {
-    width: 120px;
-    font-weight: 700;
-    text-align: right;
-    color: #333;
-    display: inline-block;
-}
-
-#modalDetailPengadaan .total-section .modal-total-line.final span:last-child {
-    color: var(--primary-green);
-    font-size: 1.2rem;
-}
-
-/* Style untuk badge PO Status di Modal */
-#detailStatusPO .badge {
-    font-size: 1rem;
-    padding: 6px 10px;
-}
-
-/* Modal Info Header style dari pengadaan.php */
-#modalDetailPenerimaan .modal-body .form-group label {
-    color: #666;
-    /* Warna label yang lebih lembut */
-}
-
-#modalDetailPenerimaan .modal-info {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    /* Warna info yang lebih gelap */
-    margin-top: 5px;
-}
-
-/* Total Section untuk Modal */
-#modalDetailPenerimaan .total-section .modal-total-line {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 5px;
-    font-size: 1rem;
-}
-
-#modalDetailPenerimaan .total-section .modal-total-line span:first-child {
-    width: 150px;
-    font-weight: 400;
-    color: #666;
-    text-align: left;
-}
-
-#modalDetailPenerimaan .total-section .modal-total-line span:last-child {
-    width: 120px;
-    font-weight: 700;
-    text-align: right;
-    color: #333;
-}
-
-#modalDetailPenerimaan .total-section .modal-total-line.final span:last-child {
-    color: var(--primary-green);
-    font-size: 1.2rem;
+    #tableRoles th,
+    #tableRoles td,
+    #tableUsers th,
+    #tableUsers td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
 }
