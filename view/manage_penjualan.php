@@ -61,11 +61,6 @@ checkAuth();
             display: inline-block;
             width: 150px;
         }
-        .filter-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -118,10 +113,6 @@ checkAuth();
                                 <select id="select-barang">
                                     <option value="">Memuat barang...</option>
                                 </select>
-                                <div class="filter-buttons">
-                                    <button type="button" id="btn-filter-aktif" class="btn btn-primary btn-sm">Barang Aktif</button>
-                                    <button type="button" id="btn-filter-semua" class="btn btn-secondary btn-sm">Semua Barang</button>
-                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="jumlah-barang">Jumlah</label>
@@ -225,9 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadBarangList('aktif');
     loadSalesList();
 
-    // Event listener untuk tombol filter
-    document.getElementById('btn-filter-aktif').addEventListener('click', () => loadBarangList('aktif'));
-    document.getElementById('btn-filter-semua').addEventListener('click', () => loadBarangList('semua'));
+    // Event listener untuk refresh list
     document.getElementById('btnRefreshList').addEventListener('click', loadSalesList);
 });
 

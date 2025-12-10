@@ -78,8 +78,8 @@ function handleGet($dbconn) {
                 return false;
             });
 
-            // Urutkan berdasarkan nama (di PHP)
-            usort($filtered, fn($a,$b) => strcmp($a['nama'], $b['nama']));
+            // Urutkan berdasarkan ID barang (di PHP)
+            usort($filtered, fn($a,$b) => $a['idbarang'] - $b['idbarang']);
 
             echo json_encode(['success' => true, 'data' => array_values($filtered)]);
         } catch (Exception $e) {
