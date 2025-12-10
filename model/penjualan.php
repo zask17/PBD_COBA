@@ -201,13 +201,27 @@ function handlePost($dbconn, $iduser) {
         $stmtDetail = $dbconn->prepare("INSERT INTO detail_penjualan 
             (penjualan_idpenjualan, idbarang, harga_satuan, jumlah, subtotal)
             VALUES (?, ?, ?, ?, ?)");
-        $stmtStok = $dbconn->prepare("CALL sp_proses_penjualan_transaksi(?, ?, ?)");
+        
+        // Ambil stok terbaru untuk setiap barang (ORDER BY di PHP, bukan di SP)
+        $stokCache = [];
+        foreach ($items as $i) {
+            if (!isset($stokCache[$i['idbarang']])) {
+                $stokRes = $dbconn->query("SELECT stok FROM kartu_stok WHERE idbarang = {$i['idbarang']} ORDER BY created_at DESC, idkartu_stok DESC LIMIT 1");
+                $stokRow = $stokRes->fetch_assoc();
+                $stokCache[$i['idbarang']] = $stokRow['stok'] ?? 0;
+            }
+        }
+        
+        $stmtStok = $dbconn->prepare("CALL sp_proses_penjualan_transaksi(?, ?, ?, ?)");
 
         foreach ($items as $i) {
             $subtotal = $i['harga_jual'] * $i['jumlah'];
+            
+            // Ambil stok terbaru dari cache atau query
+            $stokSebelumnya = $stokCache[$i['idbarang']] ?? 0;
 
-            // Kurangi stok
-            $stmtStok->bind_param("iii", $idpenjualan, $i['idbarang'], $i['jumlah']);
+            // Kurangi stok (dengan stok sebelumnya sebagai parameter)
+            $stmtStok->bind_param("iiii", $idpenjualan, $i['idbarang'], $i['jumlah'], $stokSebelumnya);
             $stmtStok->execute();
 
             // Insert detail
@@ -247,9 +261,23 @@ function handleDelete($dbconn, $iduser) {
         $stmt->execute();
         $details = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $stmtStok = $dbconn->prepare("CALL sp_proses_pembatalan_penjualan(?, ?, ?)");
+        // Ambil stok terbaru untuk setiap barang pembatalan (ORDER BY di PHP, bukan di SP)
+        $stokCacheBatal = [];
         foreach ($details as $d) {
-            $stmtStok->bind_param("iii", $id, $d['idbarang'], $d['jumlah']);
+            if (!isset($stokCacheBatal[$d['idbarang']])) {
+                $stokRes = $dbconn->query("SELECT stok FROM kartu_stok WHERE idbarang = {$d['idbarang']} ORDER BY created_at DESC, idkartu_stok DESC LIMIT 1");
+                $stokRow = $stokRes->fetch_assoc();
+                $stokCacheBatal[$d['idbarang']] = $stokRow['stok'] ?? 0;
+            }
+        }
+
+        $stmtStok = $dbconn->prepare("CALL sp_proses_pembatalan_penjualan(?, ?, ?, ?)");
+        foreach ($details as $d) {
+            // Ambil stok terbaru dari cache
+            $stokSebelumnya = $stokCacheBatal[$d['idbarang']] ?? 0;
+            
+            // Kembalikan stok (dengan stok sebelumnya sebagai parameter)
+            $stmtStok->bind_param("iiii", $id, $d['idbarang'], $d['jumlah'], $stokSebelumnya);
             $stmtStok->execute();
         }
 

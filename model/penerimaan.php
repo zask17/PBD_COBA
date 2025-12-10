@@ -38,6 +38,64 @@ switch ($method) {
 // Tidak perlu $dbconn->close() di sini karena koneksi akan ditutup setelah skrip selesai
 
 // ============================================
+// HELPER FUNCTIONS - Emulasi VIEW V_PENGADAAN
+// ============================================
+function buildVPengadaanRow($dbconn, $p) {
+    // Hitung total_dipesan menggunakan Subkueri Skalar
+    $result_dipesan = $dbconn->query("
+        SELECT COALESCE(SUM(dp.jumlah), 0) AS total_dipesan
+        FROM detail_pengadaan dp
+        WHERE dp.idpengadaan = {$p['idpengadaan']}
+    ");
+    $row_dipesan = $result_dipesan->fetch_assoc();
+    $total_dipesan = $row_dipesan['total_dipesan'];
+
+    // Hitung total_diterima menggunakan Subkueri Skalar
+    $result_diterima = $dbconn->query("
+        SELECT COALESCE(SUM(dpr.jumlah_terima), 0) AS total_diterima
+        FROM penerimaan pr
+        JOIN detail_penerimaan dpr ON pr.idpenerimaan = dpr.idpenerimaan
+        WHERE pr.idpengadaan = {$p['idpengadaan']}
+    ");
+    $row_diterima = $result_diterima->fetch_assoc();
+    $total_diterima = $row_diterima['total_diterima'];
+
+    // Tentukan display_status
+    $display_status = null;
+    if ($p['status'] === 'c') {
+        $display_status = 'Closed/Batal';
+    } elseif ($total_diterima == 0) {
+        $display_status = 'Dipesan';
+    } elseif ($total_diterima >= $total_dipesan) {
+        $display_status = 'Diterima Penuh';
+    }
+
+    // Tentukan parsial_status
+    $parsial_status = null;
+    if ($total_diterima > 0 && $total_diterima < $total_dipesan) {
+        $parsial_status = 'Parsial';
+    }
+
+    // Tentukan final status yang ditampilkan
+    $final_display_status = ($parsial_status !== null) ? $parsial_status : $display_status;
+
+    return [
+        'idpengadaan' => $p['idpengadaan'],
+        'timestamp' => $p['timestamp'],
+        'tanggal' => $p['timestamp'],
+        'nama_vendor' => $p['nama_vendor'],
+        'username' => $p['username'],
+        'total_nilai' => $p['total_nilai'],
+        'status' => $p['status'],
+        'total_dipesan' => $total_dipesan,
+        'total_diterima' => $total_diterima,
+        'display_status' => $final_display_status,
+        'status_teks' => $final_display_status,
+        'parsial_status' => $parsial_status
+    ];
+}
+
+// ============================================
 // HANDLER GET - Ambil Data
 // ============================================
 function handleGet($dbconn) {
@@ -46,16 +104,19 @@ function handleGet($dbconn) {
     // 1. GET OPEN PO - Ambil PO yang statusnya masih P (Dipesan) atau S (Sebagian)
     if ($action === 'get_open_pos') {
         try {
+            // Query langsung dari tabel pengadaan tanpa VIEW
             $sql = "SELECT 
-                        idpengadaan, 
-                        tanggal as timestamp, 
-                        nama_vendor,
-                        display_status as status_teks,
-                        status
-                    FROM V_PENGADAAN
-                    WHERE status IN ('p', 's')
-                    -- ORDER BY di backend
-                    ORDER BY tanggal DESC";
+                        p.idpengadaan, 
+                        p.timestamp,
+                        p.total_nilai,
+                        p.status,
+                        v.nama_vendor, 
+                        u.username
+                    FROM pengadaan p
+                    LEFT JOIN vendor v ON p.vendor_idvendor = v.idvendor
+                    LEFT JOIN user u ON p.user_iduser = u.iduser
+                    WHERE p.status IN ('p', 's')
+                    ORDER BY p.timestamp DESC";
             
             $result = $dbconn->query($sql);
             
@@ -63,7 +124,13 @@ function handleGet($dbconn) {
                 throw new Exception('Query error: ' . $dbconn->error);
             }
             
-            $data = $result->fetch_all(MYSQLI_ASSOC);
+            $pengadaan_rows = $result->fetch_all(MYSQLI_ASSOC);
+            
+            // Emulasi VIEW V_PENGADAAN untuk setiap row
+            $data = [];
+            foreach ($pengadaan_rows as $row) {
+                $data[] = buildVPengadaanRow($dbconn, $row);
+            }
             
             echo json_encode([
                 'success' => true, 
