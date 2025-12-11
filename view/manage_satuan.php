@@ -59,8 +59,8 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 <div class="card-header">
                     <h2>Daftar Satuan</h2>
                     <div style="display: flex; gap: 0.5rem; margin-left: auto; margin-right: 1rem;">
-                        <button id="btnSatuanAktif" class="btn btn-info btn-sm" data-filter="aktif">✔ Satuan Aktif</button>
-                        <button id="btnSemuaSatuan" class="btn btn-warning btn-sm active" data-filter="semua">Semua Satuan</button>
+                        <button id="btnSatuanAktif" class="btn btn-info btn-sm active" data-filter="aktif">✔ Satuan Aktif</button>
+                        <button id="btnSemuaSatuan" class="btn btn-warning btn-sm" data-filter="semua">Semua Satuan</button>
                     </div>
                     <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
                     <button id="btnTambah" class="btn btn-primary"><span>Tambah Satuan</span></button>
@@ -121,11 +121,13 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
     <script>
         const API_URL = '../model/satuan.php';
-        let currentView = 'semua'; // default: 'semua'
+        // Ubah default view menjadi 'aktif'
+        let currentView = 'aktif'; 
 
         document.addEventListener('DOMContentLoaded', () => {
             loadSatuan(currentView);
-            document.getElementById('btnSemuaSatuan').classList.add('active'); // Set default active button
+            // Hapus baris ini karena sudah diatur di markup dan akan diatur di loadSatuan
+            // document.getElementById('btnSemuaSatuan').classList.add('active'); 
         });
 
         function closeModal() {
@@ -134,7 +136,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         }
 
         // Fungsi utama untuk memuat data dengan filter
-        async function loadSatuan(view = 'semua') {
+        async function loadSatuan(view = 'aktif') { // Ubah default argument di fungsi
             currentView = view;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
@@ -161,13 +163,14 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => {
-                        const statusText = item.status_text || 'Aktif';
+                        // Di V_SATUAN_AKTIF, status_text tidak ada, jadi defaultnya 'Aktif'
+                        const statusText = item.status_text || 'Aktif'; 
                         const badgeClass = statusText === 'Aktif' ? 'badge-success' : 'badge-danger';
                         
                         // --- LOGIKA PERUBAHAN TOMBOL AFEKSI START ---
                         let actionButton;
                         if (statusText === 'Aktif') {
-                            // Jika Aktif, tombolnya adalah Hapus/Non-aktifkan
+                            // Jika Aktif, tombolnya adalah Nonaktifkan
                             actionButton = `<button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Nonaktifkan</button>`;
                         } else {
                             // Jika Non-Aktif, tombolnya adalah Aktifkan
@@ -200,8 +203,8 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         async function reactivateSatuan(id, nama) {
             if (!confirm(`Yakin ingin mengaktifkan kembali satuan "${nama}"?`)) return;
 
-            // Kita perlu mengambil nama satuan karena API PUT membutuhkannya
             try {
+                // 1. Ambil detail data (perlu nama satuan untuk PUT)
                 const responseDetail = await fetch(`${API_URL}?id=${id}`);
                 const detailResult = await responseDetail.json();
                 
@@ -212,10 +215,11 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
                 const data = detailResult.data;
                 
+                // 2. Siapkan data untuk PUT (Update status menjadi aktif)
                 const formData = new FormData();
-                formData.append('_method', 'PUT'); // Menggunakan PUT untuk update status
+                formData.append('_method', 'PUT'); 
                 formData.append('idsatuan', id);
-                formData.append('nama_satuan', data.nama_satuan); // Nama harus ikut dikirim saat PUT/Edit
+                formData.append('nama_satuan', data.nama_satuan); 
                 formData.append('status', 'aktif'); // Mengubah status menjadi aktif (1)
 
                 const response = await fetch(API_URL, {
@@ -231,7 +235,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         }
 
 
-        // Event Listeners untuk tombol filter baru
+        // Event Listeners untuk tombol filter
         document.getElementById('btnSatuanAktif').addEventListener('click', () => {
             loadSatuan('aktif');
         });
