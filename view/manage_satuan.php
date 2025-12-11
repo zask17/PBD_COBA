@@ -59,8 +59,8 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                 <div class="card-header">
                     <h2>Daftar Satuan</h2>
                     <div style="display: flex; gap: 0.5rem; margin-left: auto; margin-right: 1rem;">
-                        <button id="btnSatuanAktif" class="btn btn-info btn-sm">✔ Satuan Aktif</button>
-                        <button id="btnSemuaSatuan" class="btn btn-warning btn-sm active">Semua Satuan</button>
+                        <button id="btnSatuanAktif" class="btn btn-info btn-sm" data-filter="aktif">✔ Satuan Aktif</button>
+                        <button id="btnSemuaSatuan" class="btn btn-warning btn-sm active" data-filter="semua">Semua Satuan</button>
                     </div>
                     <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
                     <button id="btnTambah" class="btn btn-primary"><span>Tambah Satuan</span></button>
@@ -121,7 +121,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
     <script>
         const API_URL = '../model/satuan.php';
-        let currentView = 'semua'; // default: 'semua' atau 'aktif'
+        let currentView = 'semua'; // default: 'semua'
 
         document.addEventListener('DOMContentLoaded', () => {
             loadSatuan(currentView);
@@ -161,17 +161,16 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => {
-                        // Cek jika status_text ada (dari V_SATUAN_SEMUA), jika tidak, asumsikan Aktif (dari V_SATUAN_AKTIF)
                         const statusText = item.status_text || 'Aktif';
                         const badgeClass = statusText === 'Aktif' ? 'badge-success' : 'badge-danger';
+                        
                         // --- LOGIKA PERUBAHAN TOMBOL AFEKSI START ---
                         let actionButton;
                         if (statusText === 'Aktif') {
                             // Jika Aktif, tombolnya adalah Hapus/Non-aktifkan
-                            actionButton = `<button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Hapus</button>`;
+                            actionButton = `<button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Nonaktifkan</button>`;
                         } else {
                             // Jika Non-Aktif, tombolnya adalah Aktifkan
-                            // Kita panggil fungsi editSatuan dan set status ke 'aktif'
                             actionButton = `<button class="btn btn-success btn-sm" onclick="reactivateSatuan('${item.idsatuan}', '${item.nama_satuan}')">Aktifkan</button>`;
                         }
                         // --- LOGIKA PERUBAHAN TOMBOL AFEKSI END ---
@@ -183,7 +182,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
                                 <td class="action-buttons">
                                     <button class="btn btn-primary btn-sm" onclick="editSatuan('${item.idsatuan}')">Edit</button>
-                                    <button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Nonaktifkans</button>
+                                    ${actionButton}
                                 </td>
                             </tr>
                         `;
@@ -201,13 +200,24 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         async function reactivateSatuan(id, nama) {
             if (!confirm(`Yakin ingin mengaktifkan kembali satuan "${nama}"?`)) return;
 
-            const formData = new FormData();
-            formData.append('_method', 'PUT'); // Menggunakan PUT untuk update status
-            formData.append('idsatuan', id);
-            formData.append('nama_satuan', nama); // Nama harus ikut dikirim saat PUT/Edit
-            formData.append('status', 'aktif'); // Mengubah status menjadi aktif (1)
-
+            // Kita perlu mengambil nama satuan karena API PUT membutuhkannya
             try {
+                const responseDetail = await fetch(`${API_URL}?id=${id}`);
+                const detailResult = await responseDetail.json();
+                
+                if (!detailResult.success) {
+                    alert('Gagal mengambil detail satuan untuk re-aktivasi.');
+                    return;
+                }
+
+                const data = detailResult.data;
+                
+                const formData = new FormData();
+                formData.append('_method', 'PUT'); // Menggunakan PUT untuk update status
+                formData.append('idsatuan', id);
+                formData.append('nama_satuan', data.nama_satuan); // Nama harus ikut dikirim saat PUT/Edit
+                formData.append('status', 'aktif'); // Mengubah status menjadi aktif (1)
+
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     body: formData
@@ -235,6 +245,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             document.getElementById('formSatuan').reset();
             document.getElementById('idsatuan').value = '';
             document.getElementById('formMethod').value = 'POST';
+            document.getElementById('status').value = 'aktif'; // Default aktif
             document.getElementById('modalForm').classList.add('show');
         });
 
@@ -259,8 +270,9 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             }
         }
 
+        // Soft Delete / Menonaktifkan
         async function deleteSatuan(id, nama) {
-            if (!confirm(`Yakin ingin menonaktifkan satuan "${nama}"?`)) return;
+            if (!confirm(`Yakin ingin menonaktifkan satuan "${nama}"? (Status akan diubah menjadi Non-Aktif)`)) return;
 
             const formData = new FormData();
             formData.append('_method', 'DELETE');

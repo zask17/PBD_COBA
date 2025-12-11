@@ -186,7 +186,7 @@ function handleDelete($dbconn)
     }
 
     // Menggunakan soft delete (mengubah status menjadi tidak aktif / 0)
-    $stmt = $dbconn->prepare("UPDATE satuan SET status = 0 WHERE idsatuan = ?");
+    $stmt = $dbconn->prepare("UPDATE satuan SET status = 0 WHERE idsatuan = ? AND status = 1"); // Hanya update jika status masih Aktif (1)
     if (!$stmt) {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Gagal mempersiapkan statement DELETE: ' . $dbconn->error]);
@@ -198,11 +198,22 @@ function handleDelete($dbconn)
         if ($stmt->affected_rows > 0) {
             echo json_encode(['success' => true, 'message' => 'Satuan berhasil dinonaktifkan (soft delete).']);
         } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Satuan tidak ditemukan.']);
+            // Cek jika ID tidak ditemukan atau sudah non-aktif
+            $check_stmt = $dbconn->prepare("SELECT 1 FROM satuan WHERE idsatuan = ?");
+            $check_stmt->bind_param("i", $idsatuan_int);
+            $check_stmt->execute();
+            
+            if ($check_stmt->get_result()->num_rows === 0) {
+                 http_response_code(404);
+                 echo json_encode(['success' => false, 'message' => 'Satuan tidak ditemukan.']);
+            } else {
+                 echo json_encode(['success' => true, 'message' => 'Satuan sudah dalam status Non-Aktif.']);
+            }
+            $check_stmt->close();
         }
     } else {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Gagal menonaktifkan satuan: ' . $stmt->error]);
     }
 }
+?>
