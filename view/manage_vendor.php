@@ -5,7 +5,7 @@ require_once '../model/auth.php';
 
 checkAuth();
 
-// DISESUAIKAN: Variabel status aktif/non-aktif menggunakan kode 'A' dan 'N'/'T'
+// DISESUAIKAN: Variabel status aktif/non-aktif menggunakan kode 'A' dan 'T'
 // Menggunakan 'T' sesuai skema DDL: WHEN status = 'T' THEN 'Non-Aktif'
 $vendor_statuses = ['A' => 'Aktif', 'T' => 'Non-Aktif']; 
 // DISESUAIKAN: Variabel badan hukum menggunakan kode 'A' dan 'T'
@@ -150,6 +150,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
         </div>
 
         <script>
+            const API_URL = '../model/vendor.php';
             let currentFilter = 'aktif'; // Filter default saat halaman dimuat
 
             document.addEventListener('DOMContentLoaded', () => {
@@ -159,7 +160,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
 
             async function loadStats() {
                 try {
-                    const response = await fetch('../model/vendor.php?action=get_stats');
+                    const response = await fetch(`${API_URL}?action=get_stats`);
                     const result = await response.json();
 
                     if (result.success) {
@@ -173,8 +174,10 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
 
             async function loadVendor(filter) {
                 currentFilter = filter;
-                const url = `../model/vendor.php?filter=${filter}`;
+                const url = `${API_URL}?filter=${filter}`;
                 const tbody = document.getElementById('tableBody');
+                
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading...</td></tr>';
                 
                 // Update tampilan tombol filter
                 document.getElementById('btnVendorAktif').classList.remove('active');
@@ -196,18 +199,33 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     const result = await response.json();
 
                     if (result.success && result.data.length > 0) {
-                        tbody.innerHTML = result.data.map(item => `
-                        <tr>
-                            <td>${item.idvendor}</td>
-                            <td>${item.nama_vendor}</td>
-                            <td>${item.jenis_badan_hukum}</td>
-                            <td><span class="badge ${item.status_aktif === 'Aktif' ? 'badge-success' : 'badge-danger'}">${item.status_aktif}</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-primary btn-sm" onclick="editVendor('${item.idvendor}')">Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteVendor('${item.idvendor}', '${item.nama_vendor}')">Hapus</button>
-                            </td>
-                        </tr>
-                        `).join('');
+                        tbody.innerHTML = result.data.map(item => {
+                            const statusText = item.status_aktif;
+                            
+                            // --- LOGIKA PERUBAHAN TOMBOL AFEKSI START ---
+                            let actionButton;
+                            if (statusText === 'Aktif') {
+                                // Tombol untuk soft delete/non-aktifkan
+                                actionButton = `<button class="btn btn-danger btn-sm" onclick="deleteVendor('${item.idvendor}', '${item.nama_vendor}')">Nonaktifkan</button>`;
+                            } else {
+                                // Tombol untuk re-aktivasi
+                                actionButton = `<button class="btn btn-success btn-sm" onclick="reactivateVendor('${item.idvendor}', '${item.nama_vendor}')">Aktifkan</button>`;
+                            }
+                            // --- LOGIKA PERUBAHAN TOMBOL AFEKSI END ---
+
+                            return `
+                                <tr>
+                                    <td>${item.idvendor}</td>
+                                    <td>${item.nama_vendor}</td>
+                                    <td>${item.jenis_badan_hukum}</td>
+                                    <td><span class="badge ${statusText === 'Aktif' ? 'badge-success' : 'badge-danger'}">${statusText}</span></td>
+                                    <td class="action-buttons">
+                                        <button class="btn btn-primary btn-sm" onclick="editVendor('${item.idvendor}')">Edit</button>
+                                        ${actionButton}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
                     } else if (result.success && result.data.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada data vendor yang sesuai dengan filter.</td></tr>';
                     } else {
@@ -243,7 +261,7 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
 
             async function editVendor(id) {
                 try {
-                    const response = await fetch(`../model/vendor.php?id=${id}`);
+                    const response = await fetch(`${API_URL}?id=${id}`);
                     const result = await response.json();
 
                     if (result.success) {
@@ -261,16 +279,17 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     alert('Error loading data: ' + error.message);
                 }
             }
-
+            
+            // Soft Delete / Menonaktifkan
             async function deleteVendor(id, nama) {
-                if (!confirm(`Nonaktifkan vendor "${nama}"? (Ini akan mengubah statusnya menjadi Non-Aktif/T)`)) return;
+                if (!confirm(`Yakin ingin menonaktifkan vendor "${nama}"? (Ini akan mengubah statusnya menjadi Non-Aktif/T)`)) return;
 
                 try {
                     const formData = new FormData();
-                    formData.append('_method', 'DELETE');
+                    formData.append('_method', 'DELETE'); // Trigger DELETE logic di API
                     formData.append('idvendor', id);
 
-                    const response = await fetch('../model/vendor.php', {
+                    const response = await fetch(API_URL, {
                         method: 'POST',
                         body: formData
                     });
@@ -286,13 +305,55 @@ $badan_hukum_options = ['A' => 'Berbadan Hukum (PT)', 'T' => 'Tidak Berbadan Huk
                     alert('Error: ' + error.message);
                 }
             }
+            
+            // Soft Delete Reversal / Mengaktifkan Kembali
+            async function reactivateVendor(id, nama) {
+                 if (!confirm(`Yakin ingin mengaktifkan kembali vendor "${nama}"?`)) return;
+
+                try {
+                    // 1. Ambil data vendor (perlu badan_hukum dan nama_vendor untuk PUT)
+                    const responseDetail = await fetch(`${API_URL}?id=${id}`);
+                    const detailResult = await responseDetail.json();
+                    
+                    if (!detailResult.success) {
+                        alert('Gagal mengambil detail vendor untuk re-aktivasi.');
+                        return;
+                    }
+
+                    const data = detailResult.data;
+                    
+                    // 2. Siapkan data untuk PUT (Update status menjadi 'A')
+                    const formData = new FormData();
+                    formData.append('_method', 'PUT'); 
+                    formData.append('idvendor', id);
+                    formData.append('nama_vendor', data.nama_vendor); 
+                    formData.append('badan_hukum', data.badan_hukum);
+                    formData.append('status', 'A'); // Set status AKTIF
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (result.success) {
+                        loadVendor(currentFilter);
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Error saat mengaktifkan vendor: ' + error.message);
+                }
+            }
+
 
             document.getElementById('formVendor').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
 
                 try {
-                    const response = await fetch('../model/vendor.php', {
+                    const response = await fetch(API_URL, {
                         method: 'POST',
                         body: formData
                     });

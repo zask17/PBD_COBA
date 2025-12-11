@@ -85,7 +85,6 @@ function handleGet($dbconn) {
         
         if ($filter === 'aktif') {
             // Menggunakan V_VENDOR_SEMUA dan memfilter hasilnya di PHP (karena V_VENDOR_AKTIF asli hanya mengembalikan 3 kolom)
-            // Atau jika kita mengasumsikan V_VENDOR_AKTIF sudah diubah untuk mengembalikan data lengkap:
             $sql = "SELECT 
                         idvendor, 
                         VENDOR AS nama_vendor, 
@@ -154,7 +153,7 @@ function handlePut($dbconn) {
     $idvendor = $_POST['idvendor'] ?? null;
     $nama_vendor = $_POST['nama_vendor'] ?? null;
     $badan_hukum = $_POST['badan_hukum'] ?? null;
-    $status = $_POST['status'] ?? null;
+    $status = $_POST['status'] ?? null; // Bisa 'A' atau 'T' dari reactivateVendor
 
     if (empty($idvendor) || empty($nama_vendor) || empty($badan_hukum) || empty($status)) {
         http_response_code(400);
@@ -178,7 +177,7 @@ function handlePut($dbconn) {
  * Fungsi untuk menangani permintaan DELETE (Menonaktifkan data, disimulasikan via POST)
  */
 function handleDelete($dbconn) {
-    // DELETE VENDOR (Soft Delete: Ubah status menjadi 'N'/Non-Aktif)
+    // DELETE VENDOR (Soft Delete: Ubah status menjadi 'T'/Non-Aktif)
     $idvendor = $_POST['idvendor'] ?? null;
     
     if (empty($idvendor)) {
@@ -187,15 +186,25 @@ function handleDelete($dbconn) {
         return;
     }
 
-    $stmt = $dbconn->prepare("UPDATE vendor SET status = 'T' WHERE idvendor = ?"); // Menggunakan 'T' (Non-Aktif) berdasarkan skema Anda
+    $stmt = $dbconn->prepare("UPDATE vendor SET status = 'T' WHERE idvendor = ? AND status = 'A'"); // Hanya update jika status masih Aktif
     $stmt->bind_param("i", $idvendor);
 
     if ($stmt->execute()) {
         if ($stmt->affected_rows > 0) {
             echo json_encode(['success' => true, 'message' => 'Vendor berhasil dinonaktifkan.']);
         } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Vendor tidak ditemukan.']);
+            // Cek jika ID tidak ditemukan atau sudah non-aktif
+            $check_stmt = $dbconn->prepare("SELECT 1 FROM vendor WHERE idvendor = ?");
+            $check_stmt->bind_param("i", $idvendor);
+            $check_stmt->execute();
+            
+            if ($check_stmt->get_result()->num_rows === 0) {
+                 http_response_code(404);
+                 echo json_encode(['success' => false, 'message' => 'Vendor tidak ditemukan.']);
+            } else {
+                 echo json_encode(['success' => true, 'message' => 'Vendor sudah dalam status Non-Aktif.']);
+            }
+            $check_stmt->close();
         }
     } else {
         http_response_code(500);
