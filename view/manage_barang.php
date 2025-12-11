@@ -256,21 +256,36 @@ $jenis_barang_options = [
                     const result = await response.json();
 
                     if (result.success && result.data.length > 0) {
-                        tbody.innerHTML = result.data.map(item => `
-                        <tr>
-                            <td>${item.kode_barang}</td>
-                            <td>${item.nama_barang}</td>
-                            <td>${item.nama_satuan || '-'}</td>
-                            <td>${item.jenis_barang || '-'}</td>
-                            <td>Rp ${formatRupiah(item.harga_pokok)}</td>
-                            <td>${formatRupiah(item.stok)}</td>
-                            <td><span class="badge ${item.status === 'aktif' ? 'badge-success' : 'badge-danger'}">${item.status}</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-primary btn-sm" onclick="editBarang('${item.idbarang}')">Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteBarang('${item.idbarang}', '${item.nama_barang}')">Hapus</button>
-                            </td>
-                        </tr>
-                    `).join('');
+                        tbody.innerHTML = result.data.map(item => {
+                            const statusText = item.status;
+                            
+                            // --- LOGIKA PERUBAHAN TOMBOL AFEKSI START ---
+                            let actionButton;
+                            if (statusText === 'aktif') {
+                                // Tombol untuk soft delete/non-aktifkan
+                                actionButton = `<button class="btn btn-danger btn-sm" onclick="deleteBarang('${item.idbarang}', '${item.nama_barang}')">Nonaktifkan</button>`;
+                            } else {
+                                // Tombol untuk re-aktivasi
+                                actionButton = `<button class="btn btn-success btn-sm" onclick="reactivateBarang('${item.idbarang}', '${item.nama_barang}')">Aktifkan</button>`;
+                            }
+                            // --- LOGIKA PERUBAHAN TOMBOL AFEKSI END ---
+                            
+                            return `
+                                <tr>
+                                    <td>${item.kode_barang}</td>
+                                    <td>${item.nama_barang}</td>
+                                    <td>${item.nama_satuan || '-'}</td>
+                                    <td>${item.jenis_barang || '-'}</td>
+                                    <td>Rp ${formatRupiah(item.harga_pokok)}</td>
+                                    <td>${formatRupiah(item.stok)}</td>
+                                    <td><span class="badge ${item.status === 'aktif' ? 'badge-success' : 'badge-danger'}">${item.status}</span></td>
+                                    <td class="action-buttons">
+                                        <button class="btn btn-primary btn-sm" onclick="editBarang('${item.idbarang}')">Edit</button>
+                                        ${actionButton}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
                     } else {
                         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Tidak ada data barang yang sesuai dengan filter.</td></tr>';
                     }
@@ -279,6 +294,48 @@ $jenis_barang_options = [
                     tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Gagal memuat data. Periksa konsol browser.</td></tr>';
                 }
             }
+            
+            // --- FUNGSI BARU UNTUK RE-AKTIVASI (SOFT DELETE REVERSAL) ---
+            async function reactivateBarang(id, nama) {
+                if (!confirm(`Apakah Anda yakin ingin MENGAKTIFKAN kembali barang "${nama}"?`)) return;
+
+                // Memuat detail barang untuk mendapatkan data yang diperlukan (idsatuan, jenis_barang, harga_pokok)
+                try {
+                    const detailResponse = await fetch(`${API_URL}?id=${id}`);
+                    const detailResult = await detailResponse.json();
+                    
+                    if (!detailResult.success) {
+                        alert('Gagal memuat detail barang untuk aktivasi.');
+                        return;
+                    }
+                    const data = detailResult.data;
+
+                    const formData = new FormData();
+                    formData.append('_method', 'PUT'); // Menggunakan PUT untuk update status
+                    formData.append('idbarang', id);
+                    formData.append('nama_barang', data.nama_barang); // Data yang diperlukan untuk PUT
+                    formData.append('idsatuan', data.idsatuan);
+                    formData.append('jenis_barang', data.jenis_barang);
+                    formData.append('harga_pokok', data.harga_pokok);
+                    formData.append('status', 'aktif'); // Mengubah status menjadi aktif (1)
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+
+                    if (result.success) {
+                        loadBarang(currentFilter);
+                        loadStats();
+                    }
+                } catch (error) {
+                    alert('Error saat re-aktivasi: ' + error.message);
+                }
+            }
+
 
             // Event Listeners untuk tombol filter
             document.getElementById('btnBarangAktif').addEventListener('click', () => {
@@ -353,7 +410,7 @@ $jenis_barang_options = [
                 }
             }
 
-            // Delete barang (Soft Delete)
+            // Delete barang (Soft Delete - Menonaktifkan)
             async function deleteBarang(id, nama) {
                 if (!confirm(`Apakah Anda yakin ingin MENONAKTIFKAN barang "${nama}"? (Status akan diubah menjadi Non-Aktif)`)) return;
 

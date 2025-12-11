@@ -363,7 +363,6 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
             }
         }
 
-
         async function loadPengadaanList() {
             const result = await fetchData();
             const tbody = document.getElementById('tableBody');
@@ -384,9 +383,7 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
                 <td>${getStatusBadge(po.display_status)}</td>
                 <td class="action-buttons">
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewPengadaanDetails(${po.idpengadaan})">Lihat Detail</button>
-                    ${isDeletable ? 
-                        `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deletePengadaan(${po.idpengadaan})">Hapus</button>` 
-                        : ''}
+                    <!-- Tombol Hapus dinonaktifkan untuk transaksi pengadaan (soft delete) -->
                 </td>
             </tr>
         `;
@@ -395,6 +392,39 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Tidak ada data pengadaan.</td></tr>';
             }
         }
+
+
+        // async function loadPengadaanList() {
+        //     const result = await fetchData();
+        //     const tbody = document.getElementById('tableBody');
+        //     if (result.success && result.data.length > 0) {
+        //         tbody.innerHTML = result.data.map(po => {
+        //             const sisaDipesan = po.total_dipesan - po.total_diterima;
+        //             // Tentukan apakah tombol edit/hapus bisa ditampilkan (hanya jika Dipesan dan belum ada penerimaan)
+        //             const isDeletable = po.display_status === 'Dipesan';
+
+        //             return `
+        //     <tr onclick="editPengadaan(${po.idpengadaan})" style="cursor: pointer;">
+        //         <td>PO-${po.idpengadaan}</td>
+        //         <td>${new Date(po.tanggal).toLocaleDateString('id-ID')}</td>
+        //         <td>${po.nama_vendor}</td>
+        //         <td>${po.username}</td>
+        //         <td>${formatRupiah(po.total_nilai)}</td>
+        //         <td>${sisaDipesan} item</td>
+        //         <td>${getStatusBadge(po.display_status)}</td>
+        //         <td class="action-buttons">
+        //             <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewPengadaanDetails(${po.idpengadaan})">Lihat Detail</button>
+        //             ${isDeletable ? 
+        //                 `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deletePengadaan(${po.idpengadaan})">Hapus</button>` 
+        //                 : ''}
+        //         </td>
+        //     </tr>
+        // `;
+        //         }).join('');
+        //     } else {
+        //         tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Tidak ada data pengadaan.</td></tr>';
+        //     }
+        // }
 
         function getStatusBadge(status) {
             switch (status) {

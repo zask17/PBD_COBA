@@ -286,7 +286,7 @@ async function loadSalesList() {
                     <td>${formatRupiah(sale.total_nilai)}</td>
                     <td class="action-buttons">
                         <button class="btn btn-secondary btn-sm" onclick="viewSaleDetails(${sale.idpenjualan})">Detail</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteSale(${sale.idpenjualan})">Hapus</button>
+                        <!-- Tombol Hapus dinonaktifkan untuk transaksi penjualan (soft delete) -->
                     </td>
                 </tr>
             `).join('');
@@ -299,6 +299,35 @@ async function loadSalesList() {
     }
 }
 
+
+// async function loadSalesList() {
+//     try {
+//         const response = await fetch(`${API_URL}?action=list_penjualan`);
+//         const result = await response.json();
+//         const listBody = document.getElementById('penjualanListBody');
+
+//         if (result.success && result.data.length > 0) {
+//             listBody.innerHTML = result.data.map(sale => `
+//                 <tr>
+//                     <td>TX-${sale.idpenjualan}</td>
+//                     <td>${new Date(sale.created_at).toLocaleDateString('id-ID')}</td>
+//                     <td>${sale.username}</td>
+//                     <td>${sale.margin_persen}%</td>
+//                     <td>${formatRupiah(sale.total_nilai)}</td>
+//                     <td class="action-buttons">
+//                         <button class="btn btn-secondary btn-sm" onclick="viewSaleDetails(${sale.idpenjualan})">Detail</button>
+//                         <!-- Tombol Hapus dinonaktifkan untuk transaksi penjualan (soft delete) -->
+//                     </td>
+//                 </tr>
+//             `).join('');
+//         } else {
+//             listBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Belum ada transaksi penjualan.</td></tr>';
+//         }
+//     } catch (error) {
+//         console.error('Error loading sales list:', error);
+//         document.getElementById('penjualanListBody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: #f5576c;">Gagal memuat daftar penjualan.</td></tr>';
+//     }
+// }
 
 document.getElementById('btn-tambah-barang').addEventListener('click', () => {
     const select = document.getElementById('select-barang');

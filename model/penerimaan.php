@@ -215,6 +215,7 @@ function handleGet($dbconn) {
                     FROM penerimaan pr
                     JOIN user u ON pr.iduser = u.iduser
                     JOIN pengadaan p ON pr.idpengadaan = p.idpengadaan
+                    WHERE pr.deleted_at IS NULL AND p.deleted_at IS NULL
                     ORDER BY pr.idpenerimaan DESC";
             
             $result = $dbconn->query($sql);
@@ -456,9 +457,9 @@ function handleUpdate($dbconn, $data) {
         $idpengadaan_for_status = $stmt_get_po_before_update->get_result()->fetch_row()[0];
         $stmt_get_po_before_update->close();
 
-        // 1. Hapus kartu stok yang terkait (untuk reset stok)
+        // 1. Soft delete kartu stok yang terkait (untuk reset stok)
         // FIX: Menggunakan kolom DDL yang benar: idtransaksi
-        $sql_delete_stok = "DELETE FROM kartu_stok 
+        $sql_delete_stok = "UPDATE kartu_stok SET deleted_at = NOW()
                             WHERE jenis_transaksi = 'M' AND idtransaksi = ?";
         
         $stmt_delete_stok = $dbconn->prepare($sql_delete_stok);
@@ -469,8 +470,8 @@ function handleUpdate($dbconn, $data) {
         $stmt_delete_stok->bind_param("i", $idpenerimaan);
         $stmt_delete_stok->execute();
         
-        // 2. Hapus detail penerimaan lama
-        $sql_delete_detail = "DELETE FROM detail_penerimaan WHERE idpenerimaan = ?";
+        // 2. Soft delete detail penerimaan lama
+        $sql_delete_detail = "UPDATE detail_penerimaan SET deleted_at = NOW() WHERE idpenerimaan = ?";
         
         $stmt_delete_detail = $dbconn->prepare($sql_delete_detail);
         if (!$stmt_delete_detail) {

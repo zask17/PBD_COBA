@@ -4,10 +4,11 @@ require_once '../model/auth.php';
 
 // Memastikan user sudah login
 checkAuth();
-$username = $_SESSION['username'] ?? 'Pengguna'; 
+$username = $_SESSION['username'] ?? 'Pengguna';
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,12 +19,14 @@ $username = $_SESSION['username'] ?? 'Pengguna';
     <link rel="stylesheet" href="../css/satuan.css">
     <style>
         .btn.active {
-            box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5); /* Contoh: bayangan biru */
+            box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+            /* Contoh: bayangan biru */
             opacity: 0.8;
             font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard-content">
         <header>
@@ -94,12 +97,12 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             <form id="formSatuan">
                 <input type="hidden" id="idsatuan" name="idsatuan">
                 <input type="hidden" id="formMethod" name="_method">
-                
+
                 <div class="form-group">
                     <label for="nama_satuan">Nama Satuan *</label>
                     <input type="text" id="nama_satuan" name="nama_satuan" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="status">Status</label>
                     <select id="status" name="status">
@@ -107,7 +110,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                         <option value="tidak_aktif">Tidak Aktif</option>
                     </select>
                 </div>
-                
+
                 <div class="form-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan</button>
@@ -117,7 +120,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
     </div>
 
     <script>
-        const API_URL = '../model/satuan.php'; 
+        const API_URL = '../model/satuan.php';
         let currentView = 'semua'; // default: 'semua' atau 'aktif'
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -129,13 +132,13 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             document.getElementById('modalForm').classList.remove('show');
             document.getElementById('formSatuan').reset();
         }
-        
+
         // Fungsi utama untuk memuat data dengan filter
         async function loadSatuan(view = 'semua') {
             currentView = view;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading...</td></tr>';
-            
+
             // Atur status active pada tombol
             document.getElementById('btnSatuanAktif').classList.remove('active');
             document.getElementById('btnSemuaSatuan').classList.remove('active');
@@ -147,21 +150,32 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
             try {
                 // Tambahkan parameter 'view' ke URL API
-                const response = await fetch(`${API_URL}?view=${view}`); 
-                
+                const response = await fetch(`${API_URL}?view=${view}`);
+
                 if (response.status === 401) {
                     alert('Sesi Anda telah berakhir. Silakan login kembali.');
-                    window.location.href = '../view/login.php'; 
+                    window.location.href = '../view/login.php';
                     return;
                 }
                 const result = await response.json();
-                
+
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => {
                         // Cek jika status_text ada (dari V_SATUAN_SEMUA), jika tidak, asumsikan Aktif (dari V_SATUAN_AKTIF)
-                        const statusText = item.status_text || 'Aktif'; 
+                        const statusText = item.status_text || 'Aktif';
                         const badgeClass = statusText === 'Aktif' ? 'badge-success' : 'badge-danger';
-                        
+                        // --- LOGIKA PERUBAHAN TOMBOL AFEKSI START ---
+                        let actionButton;
+                        if (statusText === 'Aktif') {
+                            // Jika Aktif, tombolnya adalah Hapus/Non-aktifkan
+                            actionButton = `<button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Hapus</button>`;
+                        } else {
+                            // Jika Non-Aktif, tombolnya adalah Aktifkan
+                            // Kita panggil fungsi editSatuan dan set status ke 'aktif'
+                            actionButton = `<button class="btn btn-success btn-sm" onclick="reactivateSatuan('${item.idsatuan}', '${item.nama_satuan}')">Aktifkan</button>`;
+                        }
+                        // --- LOGIKA PERUBAHAN TOMBOL AFEKSI END ---
+
                         return `
                             <tr>
                                 <td>${item.idsatuan}</td>
@@ -169,7 +183,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
                                 <td><span class="badge ${badgeClass}">${statusText}</span></td>
                                 <td class="action-buttons">
                                     <button class="btn btn-primary btn-sm" onclick="editSatuan('${item.idsatuan}')">Edit</button>
-                                    <button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Hapus</button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteSatuan('${item.idsatuan}', '${item.nama_satuan}')">Nonaktifkans</button>
                                 </td>
                             </tr>
                         `;
@@ -183,6 +197,30 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             }
         }
 
+        // --- FUNGSI BARU UNTUK RE-AKTIVASI (SOFT DELETE REVERSAL) ---
+        async function reactivateSatuan(id, nama) {
+            if (!confirm(`Yakin ingin mengaktifkan kembali satuan "${nama}"?`)) return;
+
+            const formData = new FormData();
+            formData.append('_method', 'PUT'); // Menggunakan PUT untuk update status
+            formData.append('idsatuan', id);
+            formData.append('nama_satuan', nama); // Nama harus ikut dikirim saat PUT/Edit
+            formData.append('status', 'aktif'); // Mengubah status menjadi aktif (1)
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                alert(result.message);
+                if (result.success) loadSatuan(currentView); // Muat ulang dengan filter yang aktif
+            } catch (error) {
+                alert('Error: Gagal mengaktifkan satuan ' + error.message);
+            }
+        }
+
+
         // Event Listeners untuk tombol filter baru
         document.getElementById('btnSatuanAktif').addEventListener('click', () => {
             loadSatuan('aktif');
@@ -191,7 +229,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         document.getElementById('btnSemuaSatuan').addEventListener('click', () => {
             loadSatuan('semua');
         });
-        
+
         document.getElementById('btnTambah').addEventListener('click', () => {
             document.getElementById('modalTitle').textContent = 'Tambah Satuan';
             document.getElementById('formSatuan').reset();
@@ -204,7 +242,7 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             try {
                 const response = await fetch(`${API_URL}?id=${id}`);
                 const result = await response.json();
-                
+
                 if (result.success) {
                     const data = result.data;
                     document.getElementById('modalTitle').textContent = 'Edit Satuan';
@@ -223,13 +261,16 @@ $username = $_SESSION['username'] ?? 'Pengguna';
 
         async function deleteSatuan(id, nama) {
             if (!confirm(`Yakin ingin menonaktifkan satuan "${nama}"?`)) return;
-            
+
             const formData = new FormData();
             formData.append('_method', 'DELETE');
             formData.append('idsatuan', id);
-            
+
             try {
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
                 const result = await response.json();
                 alert(result.message);
                 if (result.success) loadSatuan(currentView); // Muat ulang dengan filter yang aktif
@@ -242,7 +283,10 @@ $username = $_SESSION['username'] ?? 'Pengguna';
             e.preventDefault();
             const formData = new FormData(e.target);
             try {
-                const response = await fetch(API_URL, { method: 'POST', body: formData });
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
                 const result = await response.json();
                 alert(result.message);
                 if (result.success) {
@@ -263,5 +307,6 @@ $username = $_SESSION['username'] ?? 'Pengguna';
         }
     </script>
 </body>
-    <?php include 'footer.php'; ?>
+<?php include 'footer.php'; ?>
+
 </html>
