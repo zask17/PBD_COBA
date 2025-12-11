@@ -216,7 +216,7 @@ $jenis_barang_options = [
                     const result = await response.json();
 
                     if (result.success) {
-                        document.getElementById('totalBarang').textContent = result.data.total_barang;
+                        document.getElementById('totalBarang').textContent = formatRupiah(result.data.total_barang);
                         document.getElementById('totalStok').textContent = formatRupiah(result.data.total_stok || 0);
                         document.getElementById('totalNilai').textContent = 'Rp ' + formatRupiah(result.data.total_nilai || 0);
                     }
