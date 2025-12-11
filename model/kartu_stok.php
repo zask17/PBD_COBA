@@ -19,6 +19,7 @@ if (!$idbarang) {
 // Logika untuk menampilkan nama jenis transaksi yang lebih user-friendly
 function getDisplayJenisTransaksi($jenis) {
     switch ($jenis) {
+        case 'I': return 'Stok Awal (Initial)'; // Tambahkan Initial Stock
         case 'M': return 'Masuk (Penerimaan)';
         case 'K': return 'Keluar (Penjualan)';
         case 'B': return 'Batal Jual (Reversal)';
@@ -31,8 +32,13 @@ function getDisplayJenisTransaksi($jenis) {
 
 try {
     // Mengambil riwayat kartu stok untuk idbarang tertentu
-    // Diurutkan berdasarkan waktu pembuatan untuk mendapatkan aliran stok yang benar
-    $stmt = $dbconn->prepare("SELECT idtransaksi, jenis_transaksi, masuk, keluar, stok, created_at FROM kartu_stok WHERE idbarang = ? ORDER BY created_at ASC, idkartu_stok ASC");
+    // Diurutkan berdasarkan waktu pembuatan dan ID untuk mendapatkan aliran stok yang benar
+    $stmt = $dbconn->prepare("SELECT idtransaksi, jenis_transaksi, masuk, keluar, stok, created_at 
+                            FROM kartu_stok 
+                            WHERE idbarang = ?
+                            -- Menambahkan filter soft delete (jika ada)
+                            -- WHERE idbarang = ? AND deleted_at IS NULL 
+                            ORDER BY created_at ASC, idkartu_stok ASC");
     $stmt->bind_param("i", $idbarang);
     $stmt->execute();
     $result = $stmt->get_result();

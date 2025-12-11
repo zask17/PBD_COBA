@@ -123,7 +123,7 @@ function buildVPengadaanRow($dbconn, $p) {
 function getAllPengadaan() {
     global $dbconn;
     try {
-        // Query langsung dari tabel pengadaan tanpa VIEW (exclude deleted records)
+        // Query langsung dari tabel pengadaan tanpa VIEW
         $sql = "SELECT 
                     p.idpengadaan, 
                     p.timestamp,
@@ -134,7 +134,6 @@ function getAllPengadaan() {
                 FROM pengadaan p
                 LEFT JOIN vendor v ON p.vendor_idvendor = v.idvendor
                 LEFT JOIN user u ON p.user_iduser = u.iduser
-                WHERE p.deleted_at IS NULL
                 ORDER BY p.timestamp DESC, p.idpengadaan DESC";
                 
         $result = $dbconn->query($sql);
@@ -339,13 +338,12 @@ function deletePengadaan($dbconn, $data) {
 
     $dbconn->begin_transaction();
     try {
-        // Soft Delete: Update deleted_at timestamp instead of hard delete
-        $stmt_header = $dbconn->prepare("UPDATE pengadaan SET deleted_at = NOW() WHERE idpengadaan = ?");
+        $stmt_header = $dbconn->prepare("DELETE FROM pengadaan WHERE idpengadaan = ?");
         $stmt_header->bind_param("i", $idpengadaan);
         $stmt_header->execute();
 
         $dbconn->commit();
-        echo json_encode(['success' => true, 'message' => "Pengadaan PO-{$idpengadaan} berhasil dihapus (soft delete)."]);
+        echo json_encode(['success' => true, 'message' => "Pengadaan PO-{$idpengadaan} berhasil dihapus."]);
     } catch (Exception $e) {
         $dbconn->rollback();
         http_response_code(500);

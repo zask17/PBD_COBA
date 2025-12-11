@@ -17,6 +17,10 @@ checkAuth();
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/kartu_stok.css"> 
+    <style>
+        .text-success { color: #28a745; font-weight: bold; }
+        .text-danger { color: #dc3545; font-weight: bold; }
+    </style>
 </head>
 
 <body>
@@ -120,6 +124,8 @@ checkAuth();
             loadBarang();
             document.getElementById('btnRefresh').addEventListener('click', loadBarang);
         });
+        
+        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(number);
 
         async function loadBarang() {
             try {
@@ -139,8 +145,8 @@ checkAuth();
     <td>${item.nama}</td>
     <td>${item.jenis === 'J' ? 'Barang Jadi' : 'Bahan Baku'}</td>
     <td>${item.satuan}</td>
-    <td>Rp ${new Intl.NumberFormat('id-ID').format(item.harga)}</td>
-    <td>${item.stok_terakhir}</td>
+    <td>Rp ${formatRupiah(item.harga)}</td>
+    <td>${formatRupiah(item.stok_terakhir)}</td>
     <td class="action-buttons">
         <button class="btn btn-secondary btn-sm" onclick="showStockCard('${item.idbarang}', '${item.nama}')">Riwayat</button>
     </td>
@@ -171,9 +177,9 @@ checkAuth();
     <td>${new Date(item.created_at).toLocaleString('id-ID')}</td>
     <td>${item.jenis_transaksi_display}</td>
     <td>${item.idtransaksi}</td>
-    <td class="${item.masuk > 0 ? 'text-success' : ''}">${item.masuk}</td>
-    <td class="${item.keluar > 0 ? 'text-danger' : ''}">${item.keluar}</td>
-    <td>${item.stok}</td>
+    <td class="${item.masuk > 0 ? 'text-success' : ''}">${formatRupiah(item.masuk)}</td>
+    <td class="${item.keluar > 0 ? 'text-danger' : ''}">${formatRupiah(item.keluar)}</td>
+    <td>${formatRupiah(item.stok)}</td>
 </tr>
 `).join('');
                 } else {
