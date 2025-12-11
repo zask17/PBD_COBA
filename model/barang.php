@@ -1,5 +1,5 @@
 <?php
-// FILE: model/barang.php (Sudah disesuaikan dengan DDL baru)
+// FILE: model/barang.php (Sudah diperbaiki)
 
 require_once 'koneksi.php';
 require_once 'auth.php';
@@ -76,12 +76,13 @@ function handleGet($dbconn) {
         // --- Ambil Detail Barang (Single Item) ---
         $id_int = intval($id);
         
-        // Menggunakan subkueri skalar/Function untuk mendapatkan stok terakhir dan join ke satuan
+        // Menggunakan subkueri skalar untuk mendapatkan stok terakhir
         $sql = "SELECT 
                     b.idbarang, b.jenis, b.nama, b.idsatuan, b.status, b.harga,
-                    stok_terakhir(b.idbarang) AS stok_terakhir_val
-                FROM barang b 
-                WHERE b.idbarang = ?";
+                    (SELECT k.stok FROM kartu_stok k 
+                     WHERE k.idbarang = b.idbarang 
+                     ORDER BY k.created_at DESC, k.idkartu_stok DESC LIMIT 1) AS stok_terakhir_val
+                FROM barang b WHERE b.idbarang = ?";
 
         $stmt = $dbconn->prepare($sql);
         $stmt->bind_param("i", $id_int);
@@ -94,7 +95,7 @@ function handleGet($dbconn) {
                 'kode_barang' => $result['idbarang'],
                 'nama_barang' => $result['nama'],
                 'idsatuan' => $result['idsatuan'],
-                'jenis_barang' => $result['jenis'], // Mengembalikan kode Jenis (J/B) untuk dropdown
+                'jenis_barang' => $result['jenis'],
                 'harga_pokok' => $result['harga'],
                 'stok' => $result['stok_terakhir_val'] ?? 0, 
                 'status' => ($result['status'] == 1) ? 'aktif' : 'tidak_aktif'
@@ -109,19 +110,16 @@ function handleGet($dbconn) {
 
     } elseif ($action === 'get_stats') {
         // --- Ambil Statistik untuk Dashboard ---
-        // Menggunakan fungsi stok_terakhir untuk SUM stok
         $sql = "SELECT 
                     COUNT(idbarang) AS total_barang,
-                    COALESCE(SUM(harga), 0) AS total_nilai,
-                    COALESCE((SELECT SUM(stok_terakhir(idbarang)) FROM barang WHERE status = 1), 0) AS total_stok
-                FROM barang WHERE status = 1"; // Hanya hitung barang aktif
+                    SUM(harga) AS total_nilai,
+                    (SELECT COALESCE(SUM(stok_terakhir(idbarang)), 0) FROM barang WHERE status = 1) AS total_stok
+                FROM barang WHERE status = 1";
         $result = $dbconn->query($sql)->fetch_assoc();
         
         $data = [
             'total_barang' => $result['total_barang'] ?? 0,
             'total_nilai' => $result['total_nilai'] ?? 0,
-            // Nilai Inventory (Harga Pokok) dihitung dari SUM(harga) untuk barang aktif.
-            // Jika ingin menghitung Nilai Inventory berdasarkan stok, harus: SUM(b.harga * stok_terakhir(b.idbarang))
             'total_stok' => $result['total_stok'] ?? 0
         ];
 
@@ -135,6 +133,8 @@ function handleGet($dbconn) {
 
     } elseif ($action === 'get_stock_card' && isset($_GET['idbarang'])) {
         // --- Ambil Histori Stok (Kartu Stok) ---
+        // Peringatan: Logika ini *seharusnya* berada di kartu_stok.php
+        // Namun, jika Anda bersikeras menggabungkannya:
         try {
             $idbarang = intval($_GET['idbarang']);
             $stmt = $dbconn->prepare(
@@ -157,13 +157,14 @@ function handleGet($dbconn) {
         // --- Ambil Semua Barang untuk Tabel Utama ---
         $filter = $_GET['filter'] ?? 'aktif';
         
-        // Query menggunakan View V_BARANG_SEMUA dan Function stok_terakhir
+        // Query disederhanakan menggunakan JOIN ke V_BARANG_SEMUA
         $sql = "SELECT 
                     vbs.`KODE BARANG` AS idbarang, 
                     vbs.`NAMA BARANG` AS nama_barang, 
                     vbs.`HARGA POKOK` AS harga_pokok, 
                     vbs.SATUAN AS nama_satuan, 
-                    vbs.`JENIS BARANG` AS jenis_barang,
+                    vbs.`JENIS BARANG` AS jenis_barang_desc,
+                    b.jenis AS jenis_barang_kode,
                     b.status AS status_kode,
                     COALESCE(stok_terakhir(b.idbarang), 0) AS stok_terakhir_val 
                 FROM V_BARANG_SEMUA vbs
@@ -173,7 +174,6 @@ function handleGet($dbconn) {
         $types = '';
 
         if ($filter !== 'semua') {
-            // Filter: 1 = Aktif, 0 = Non-Aktif
             $sql .= " WHERE b.status = ?";
             $params[] = ($filter === 'aktif') ? 1 : 0; 
             $types .= 'i';
@@ -199,7 +199,7 @@ function handleGet($dbconn) {
                 'kode_barang' => $row['idbarang'],
                 'nama_barang' => $row['nama_barang'],
                 'nama_satuan' => $row['nama_satuan'] ?? '-',
-                'jenis_barang' => $row['jenis_barang'], // Teks Jenis Barang dari VIEW
+                'jenis_barang' => $row['jenis_barang_desc'],
                 'harga_pokok' => $row['harga_pokok'],
                 'stok' => $stok, 
                 'status' => ($row['status_kode'] == 1) ? 'aktif' : 'tidak_aktif'
@@ -222,8 +222,7 @@ function handleGetActiveStock($dbconn) {
                 b.`HARGA POKOK` as harga,
                 b.`JENIS BARANG` as jenis_text,
                 b.SATUAN as satuan,
-                stok_terakhir(b.`KODE BARANG`) AS stok_terakhir,
-                (SELECT jenis FROM barang WHERE idbarang = b.`KODE BARANG`) as jenis
+                stok_terakhir(b.`KODE BARANG`) AS stok_terakhir
             FROM 
                 V_BARANG_AKTIF b
             ORDER BY 
@@ -234,7 +233,16 @@ function handleGetActiveStock($dbconn) {
         
         $data = [];
         while ($row = $result->fetch_assoc()) {
-            // Kolom 'jenis' (kode J/B) sudah diambil dari tabel barang.
+            // Konversi JENIS BARANG dari teks ke singkatan (J/B)
+            if ($row['jenis_text'] === 'BARANG JADI') {
+                $row['jenis'] = 'J';
+            } elseif ($row['jenis_text'] === 'BAHAN BAKU') {
+                $row['jenis'] = 'B';
+            } else {
+                $row['jenis'] = 'L'; // Lainnya
+            }
+            // Hapus kolom jenis_text karena sudah dikonversi
+            unset($row['jenis_text']); 
             $data[] = $row;
         }
 
@@ -283,17 +291,11 @@ function handlePost($dbconn) {
 
         // 2. Tambahkan Stok Awal ke Kartu Stok (Jika Stok > 0)
         if ($stok_awal_int > 0) {
-            // Ambil stok terakhir yang seharusnya 0 jika ini barang baru
-            $stok_terakhir = 0; // Karena baru di-insert
-            
             $stmt_stok = $dbconn->prepare(
                 "INSERT INTO kartu_stok (idbarang, jenis_transaksi, masuk, keluar, stok, idtransaksi) 
                  VALUES (?, 'I', ?, 0, ?, ?)" // I = Initial Stock
             );
-            // Stok akhir = stok terakhir (0) + masuk (stok_awal_int)
-            $stok_sekarang = $stok_terakhir + $stok_awal_int; 
-            
-            $stmt_stok->bind_param("iiii", $new_id, $stok_awal_int, $stok_sekarang, $new_id);
+            $stmt_stok->bind_param("iiii", $new_id, $stok_awal_int, $stok_awal_int, $new_id);
             $stmt_stok->execute();
             $stmt_stok->close();
         }
@@ -329,7 +331,6 @@ function handlePut($dbconn) {
     }
 
     try {
-        // Logika PUT digunakan untuk update data master (termasuk re-aktivasi status)
         $stmt = $dbconn->prepare("UPDATE barang SET nama = ?, idsatuan = ?, jenis = ?, harga = ?, status = ? WHERE idbarang = ?");
         if (!$stmt) {
             throw new Exception('Gagal mempersiapkan statement: ' . $dbconn->error);
@@ -375,17 +376,16 @@ function handleDelete($dbconn) {
 
         } else {
             // Cek apakah barang benar-benar tidak ada, atau memang sudah tidak aktif
-            $check_stmt = $dbconn->prepare("SELECT status FROM barang WHERE idbarang = ?");
+            $check_stmt = $dbconn->prepare("SELECT 1 FROM barang WHERE idbarang = ?");
             $check_stmt->bind_param("i", $idbarang_int);
             $check_stmt->execute();
-            $check_result = $check_stmt->get_result();
 
-            if ($check_result->num_rows === 0) {
+            if ($check_stmt->get_result()->num_rows === 0) {
                  http_response_code(404);
                  echo json_encode(['success' => false, 'message' => 'Barang tidak ditemukan.']);
                  
             } else {
-                // Barang ada, tapi statusnya sudah 0 sebelumnya
+                // Barang ada, tapi mungkin sudah status 0 sebelumnya
                  echo json_encode(['success' => true, 'message' => 'Barang sudah tidak aktif.']);
             }
             $check_stmt->close();
