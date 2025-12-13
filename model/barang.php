@@ -246,6 +246,9 @@ function handleGetActiveStock($dbconn) {
             $data[] = $row;
         }
 
+
+        
+
         echo json_encode(['success' => true, 'data' => $data]);
     } catch (Exception $e) {
         http_response_code(500);

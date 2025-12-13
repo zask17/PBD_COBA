@@ -16,7 +16,7 @@ if (!$idbarang) {
     exit;
 }
 
-// Logika untuk menampilkan nama jenis transaksi yang lebih user-friendly
+// Logika untuk menampilkan nama jenis transaksi
 function getDisplayJenisTransaksi($jenis) {
     switch ($jenis) {
         case 'I': return 'Stok Awal (Initial)'; // Tambahkan Initial Stock
