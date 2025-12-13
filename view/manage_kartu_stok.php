@@ -102,7 +102,7 @@ checkAuth();
                                 <th>Ref. ID</th>
                                 <th>Masuk (IN)</th>
                                 <th>Keluar (OUT)</th>
-                                <th>Saldo Akhir</th>
+                                <th>Stok Akhir</th>
                             </tr>
                         </thead>
                         <tbody id="tableBodyKartuStok">

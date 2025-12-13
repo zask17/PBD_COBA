@@ -85,7 +85,7 @@ $jenis_barang_options = [
                 <div class="card-header">
                     <h2>Daftar Barang</h2>
                     
-                    <button id="btnRefresh" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                    <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
                     
                     <div class="btn-filter-group" style="display: flex; gap: 0.5rem;">
                         <button id="btnBarangAktif" class="btn btn-success btn-sm active" data-filter="aktif">✔ Barang Aktif</button>
