@@ -92,6 +92,7 @@ if ($user_role === 'super administrator') {
             padding: 0;
             border: 1px solid #3a4254;
             width: 90%;
+            max-width: 800px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
         }
@@ -121,7 +122,7 @@ if ($user_role === 'super administrator') {
         .modal-info {
             font-size: 1.1rem;
             font-weight: 600;
-            color: #e4e6eb;
+            color: #333; /* Warna diubah agar terlihat di latar putih */
             margin-top: 5px;
         }
 
@@ -156,7 +157,7 @@ if ($user_role === 'super administrator') {
                     <?php if (!empty($dashboard_url)): ?>
                         <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span> Kembali ke Dashboard</span></a>
                     <?php endif; ?>
-                    <a href="..//auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>
@@ -300,10 +301,7 @@ if ($user_role === 'super administrator') {
                     </table>
                 </div>
                 <div class="total-section" style="margin-top: 20px;">
-                    <span>Total: </span>
-                    <span id="detail-grand-total">Rp 0</span>
-                    <small style="display: block; color: #8b92a7;">(Sudah termasuk PPN 10%)</small>
-                </div>
+                    </div>
             </div>
         </div>
     </div>
@@ -381,7 +379,7 @@ if ($user_role === 'super administrator') {
                 tbody.innerHTML = result.data.map(po => {
                     const sisaDipesan = po.total_dipesan - po.total_diterima;
                     // Tentukan apakah tombol edit/hapus bisa ditampilkan (hanya jika Dipesan dan belum ada penerimaan)
-                    const isDeletable = po.display_status === 'Dipesan';
+                    const isDeletable = po.display_status === 'Dipesan' && po.total_diterima == 0; // PO hanya bisa dihapus jika status 'Dipesan' dan belum ada penerimaan
 
                     return `
             <tr onclick="editPengadaan(${po.idpengadaan})" style="cursor: pointer;">
@@ -403,7 +401,6 @@ if ($user_role === 'super administrator') {
             }
         }
 
-
         // async function loadPengadaanList() {
         //     const result = await fetchData();
         //     const tbody = document.getElementById('tableBody');
@@ -411,7 +408,7 @@ if ($user_role === 'super administrator') {
         //         tbody.innerHTML = result.data.map(po => {
         //             const sisaDipesan = po.total_dipesan - po.total_diterima;
         //             // Tentukan apakah tombol edit/hapus bisa ditampilkan (hanya jika Dipesan dan belum ada penerimaan)
-        //             const isDeletable = po.display_status === 'Dipesan';
+        //             const isDeletable = po.display_status === 'Dipesan' && po.total_diterima == 0; // PO hanya bisa dihapus jika status 'Dipesan' dan belum ada penerimaan
 
         //             return `
         //     <tr onclick="editPengadaan(${po.idpengadaan})" style="cursor: pointer;">
@@ -550,6 +547,7 @@ if ($user_role === 'super administrator') {
 
             // Pastikan semua input form pengadaan bisa diakses kembali
             document.getElementById('idvendor').disabled = false;
+            document.getElementById('tanggal').disabled = false; // Tambahkan ini
             document.getElementById('btn-tambah-barang').disabled = false;
             document.getElementById('formPengadaan').querySelectorAll('input, select, button[type="submit"]').forEach(el => el.disabled = false);
 
@@ -563,9 +561,16 @@ if ($user_role === 'super administrator') {
 
             // --- START MODIFIKASI: Aktifkan Vendor sementara agar nilainya terkirim ---
             const vendorSelect = document.getElementById('idvendor');
+            const tanggalInput = document.getElementById('tanggal');
+            
             const isVendorDisabled = vendorSelect.disabled;
+            const isTanggalDisabled = tanggalInput.disabled;
+
             if (isVendorDisabled) {
                 vendorSelect.disabled = false;
+            }
+             if (isTanggalDisabled) {
+                tanggalInput.disabled = false;
             }
             // --- END MODIFIKASI ---
 
@@ -584,9 +589,8 @@ if ($user_role === 'super administrator') {
             if (items.length === 0) {
                 alert('Mohon tambahkan minimal satu barang.');
                 // --- MODIFIKASI: Disable kembali jika submit dibatalkan ---
-                if (isVendorDisabled) {
-                    vendorSelect.disabled = true;
-                }
+                if (isVendorDisabled) { vendorSelect.disabled = true; }
+                if (isTanggalDisabled) { tanggalInput.disabled = true; }
                 // --- END MODIFIKASI ---
                 return;
             }
@@ -602,9 +606,8 @@ if ($user_role === 'super administrator') {
             const actionText = method === 'PUT' ? 'memperbarui' : 'menyimpan';
             if (!confirm(`Yakin ingin ${actionText} Pengadaan ini?`)) {
                 // --- MODIFIKASI: Disable kembali jika submit dibatalkan ---
-                if (isVendorDisabled) {
-                    vendorSelect.disabled = true;
-                }
+                if (isVendorDisabled) { vendorSelect.disabled = true; }
+                if (isTanggalDisabled) { tanggalInput.disabled = true; }
                 // --- END MODIFIKASI ---
                 return;
             }
@@ -629,9 +632,10 @@ if ($user_role === 'super administrator') {
             } catch (error) {
                 alert('Terjadi kesalahan: ' + error.message);
             } finally {
-                // --- MODIFIKASI: Pastikan vendor didisable kembali, terlepas dari sukses/gagal ---
-                if (isVendorDisabled) {
+                // --- MODIFIKASI: Pastikan vendor dan tanggal didisable kembali, terlepas dari sukses/gagal ---
+                if (isVendorDisabled && document.getElementById('formMethod').value === 'PUT') {
                     vendorSelect.disabled = true;
+                    tanggalInput.disabled = true;
                 }
                 // --- END MODIFIKASI ---
             }
@@ -665,7 +669,7 @@ if ($user_role === 'super administrator') {
             <td>${item.nama_barang}</td>
             <td><input type="number" class="item-qty" value="${item.jumlah}" min="1" oninput="updateTotals()" style="text-align: center;" ${isModifiable ? '' : 'disabled'}></td>
             <td class="item-price" data-price="${item.harga_satuan}">${formatRupiah(item.harga_satuan)}</td>
-            <td class="item-subtotal">${formatRupiah(item.subtotal)}</td>
+            <td class="item-subtotal">${formatRupiah(item.sub_total)}</td>
             <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); updateTotals();" ${isModifiable ? '' : 'disabled'}>Hapus</button></td>
         `;
                     itemListBody.appendChild(row);
@@ -675,6 +679,7 @@ if ($user_role === 'super administrator') {
                 if (isModifiable) {
                     document.getElementById('formMethod').value = 'PUT';
                     document.getElementById('idvendor').disabled = true; // Kunci vendor setelah item dimuat
+                    document.getElementById('tanggal').disabled = false; // Tanggal bisa diubah saat PUT
                     document.getElementById('btn-tambah-barang').disabled = false;
                     document.querySelector('#formPengadaan button[type="submit"]').style.display = 'inline-flex';
                     document.getElementById('btn-finalize').style.display = 'none';
@@ -753,7 +758,6 @@ if ($user_role === 'super administrator') {
         // manage_pengadaan.php (dalam <script> - fungsi viewPengadaanDetails)
 
         async function viewPengadaanDetails(id) {
-            //tombol edit dihilangkan
             const result = await fetchData(`?id=${id}`);
             if (result.success) {
                 const po = result.data;
@@ -769,7 +773,7 @@ if ($user_role === 'super administrator') {
                 detailBody.innerHTML = '';
                 let totalSubtotal = 0;
                 po.details.forEach(item => {
-                    totalSubtotal += item.sub_total; // Menggunakan item.sub_total (sudah benar dari PHP/MySQL)
+                    totalSubtotal += parseFloat(item.sub_total); // Menggunakan item.sub_total
                     const row = document.createElement('tr');
                     row.innerHTML = `
             <td>${item.nama_barang}</td>
@@ -794,7 +798,7 @@ if ($user_role === 'super administrator') {
                 totalSectionContainer.innerHTML += `
                 <div style="text-align: right; margin-top: 10px;">
                     <span style="font-weight: 400; color: #8b92a7;">Subtotal Nilai:</span>
-                    <span style="font-weight: 600; display: inline-block; width: 120px;">${formatRupiah(totalSubtotal)}</span>
+                    <span style="font-weight: 600; display: inline-block; width: 120px; color: #333;">${formatRupiah(totalSubtotal)}</span>
                 </div>
             `;
 
@@ -802,14 +806,14 @@ if ($user_role === 'super administrator') {
                 totalSectionContainer.innerHTML += `
                 <div style="text-align: right;">
                     <span style="font-weight: 400; color: #8b92a7;">PPN (${PPN_RATE * 100}%):</span>
-                    <span style="font-weight: 600; display: inline-block; width: 120px;">${formatRupiah(ppn)}</span>
+                    <span style="font-weight: 600; display: inline-block; width: 120px; color: #333;">${formatRupiah(ppn)}</span>
                 </div>
             `;
 
                 // 3. Tambahkan Total Akhir (Grand Total)
                 totalSectionContainer.innerHTML += `
-                <div style="text-align: right; border-top: 1px solid #3a4254; padding-top: 5px;">
-                    <span style="font-weight: 600; color: #e4e6eb;">Total Akhir:</span>
+                <div style="text-align: right; border-top: 1px solid #ccc; padding-top: 5px;">
+                    <span style="font-weight: 600; color: #333;">Total Akhir:</span>
                     <span id="detail-grand-total" style="font-weight: 700; color: #28a745; display: inline-block; width: 120px;">${formatRupiah(grandTotal)}</span>
                 </div>
             `;
