@@ -9,6 +9,14 @@ checkAuth();
 $user_role = $_SESSION['role'] ?? 'Guest';
 $username = $_SESSION['username'] ?? 'Pengguna';
 
+// Tentukan URL kembali berdasarkan role
+$dashboard_url = '';
+if (($user_role ?? '') === 'super administrator') {
+    $dashboard_url = 'dashboard_super_admin.php';
+} else if (($user_role ?? '') === 'administrator') {
+    $dashboard_url = 'dashboard_admin.php';
+}
+
 // Pilihan Jenis Barang (Sesuai skema DDL: J=Barang Jadi, B=Bahan Baku)
 $jenis_barang_options = [
     'J' => 'Barang Jadi',
@@ -59,8 +67,11 @@ $jenis_barang_options = [
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
+                    <?php if (!empty($dashboard_url)): ?>
+                        <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span> Kembali ke Dashboard</span></a>
+                    <?php endif; ?>
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
-                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪 Keluar</span></a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>

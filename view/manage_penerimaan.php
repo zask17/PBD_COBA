@@ -6,6 +6,17 @@ checkAuth();
 
 // Menggunakan 'iduser' untuk konsistensi, tetapi menggunakan 'username' untuk tampilan
 $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A'); 
+
+// Tentukan URL kembali berdasarkan role
+$user_role = $_SESSION['role'] ?? 'Guest';
+$dashboard_url = '';
+if ($user_role === 'super administrator') {
+    $dashboard_url = 'dashboard_super_admin.php';
+} else if ($user_role === 'administrator') {
+    $dashboard_url = 'dashboard_admin.php';
+}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -37,8 +48,11 @@ $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem;">
-                    <a href="manage_pengadaan.php" class="btn btn-secondary"><span>⬅️</span> Ke Pengadaan</a>
-                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <?php if (!empty($dashboard_url)): ?>
+                        <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span>Kembali ke Dashboard</span></a>
+                    <?php endif; ?>
+                    <a href="manage_pengadaan.php" class="btn btn-secondary"><span>Ke Pengadaan</span></a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>

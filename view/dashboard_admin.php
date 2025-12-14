@@ -48,7 +48,7 @@ $can_read_barang = ($is_admin || $is_super_admin); // Admin bisa Read
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
-                    <span>Halo, <?php echo ucwords($username); ?>!</span>
+                    <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
                     <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>

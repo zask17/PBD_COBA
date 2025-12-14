@@ -10,6 +10,17 @@ checkAuth();
 $loggedInUsername = htmlspecialchars($_SESSION['username'] ?? 'N/A');
 $loggedInUserId = htmlspecialchars($_SESSION['iduser'] ?? '0');
 $loggedInRoleId = $_SESSION['role_id'] ?? 0;
+
+
+// Tentukan URL kembali berdasarkan role
+$user_role = $_SESSION['role'] ?? 'Guest';
+$dashboard_url = '';
+if ($user_role === 'super administrator') {
+    $dashboard_url = 'dashboard_super_admin.php';
+} else if ($user_role === 'administrator') {
+    $dashboard_url = 'dashboard_admin.php';
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -142,10 +153,10 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem;">
-                    <?php if ($loggedInRoleId == 2): ?>
-                        <a href="dashboard_user.php" class="btn btn-secondary"><span>⬅️</span> Kembali ke Dashboard</a>
+                    <?php if (!empty($dashboard_url)): ?>
+                        <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span> Kembali ke Dashboard</span></a>
                     <?php endif; ?>
-                    <a href="..//auth.php?action=logout" class="btn btn-danger"><span>🚪</span> Keluar</a>
+                    <a href="..//auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
                 </div>
             </div>
         </header>
