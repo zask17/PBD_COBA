@@ -47,10 +47,10 @@ if ($user_role === 'super administrator') {
                     </div>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
-                    <?php if (!empty($dashboard_url)): ?>
-                        <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span>Kembali ke Dashboard</span></a>
-                    <?php endif; ?>
                     <span>👋 Halo, <?php echo ucwords($username); ?>!</span>
+                    <?php if (!empty($dashboard_url)): ?>
+                        <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span> Kembali ke Dashboard</span></a>
+                    <?php endif; ?>
                     <a href="../model/auth.php?action=logout" class="btn btn-danger">
                         <span>Keluar</span>
                     </a>
