@@ -383,9 +383,6 @@ $loggedInRoleId = $_SESSION['role_id'] ?? 0;
                 <td>${getStatusBadge(po.display_status)}</td>
                 <td class="action-buttons">
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewPengadaanDetails(${po.idpengadaan})">Lihat Detail</button>
-                    ${isDeletable ? 
-                        `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deletePengadaan(${po.idpengadaan})">Hapus</button>` 
-                        : ''}
                 </td>
             </tr>
         `;
