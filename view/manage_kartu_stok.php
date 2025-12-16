@@ -1,12 +1,11 @@
 <?php
-// FILE: ../view/manage_kartu_stok.php
+// FILE: ../view/manage_kartu_stok.php (REF ID DI PALING KIRI)
 
 require_once '../model/koneksi.php';
 require_once '../model/auth.php';
 
 checkAuth();
 
-// Tentukan URL kembali berdasarkan role
 $user_role = $_SESSION['role'] ?? 'Guest';
 $dashboard_url = '';
 if ($user_role === 'super administrator') {
@@ -14,11 +13,9 @@ if ($user_role === 'super administrator') {
 } else if ($user_role === 'administrator') {
     $dashboard_url = 'dashboard_admin.php';
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +29,6 @@ if ($user_role === 'super administrator') {
         .text-danger { color: #dc3545; font-weight: bold; }
     </style>
 </head>
-
 <body>
     <div class="dashboard-content">
         <header>
@@ -51,16 +47,14 @@ if ($user_role === 'super administrator') {
                         <p>Kartu Stok</p>
                     </div>
                 </div>
-                <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;"></div>
-                <?php if (!empty($dashboard_url)): ?>
+                <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
+                    <?php if (!empty($dashboard_url)): ?>
                         <a href="<?php echo $dashboard_url; ?>" class="btn btn-secondary"><span> Kembali ke Dashboard</span></a>
                     <?php endif; ?>
-                <a href="../model/auth.php?action=logout" class="btn btn-danger">
-                    <span>Keluar</span>
-                </a>
+                    <a href="../model/auth.php?action=logout" class="btn btn-danger"><span>Keluar</span></a>
+                </div>
             </div>
         </header>
-
 
         <div class="container">
             <div class="card">
@@ -68,7 +62,6 @@ if ($user_role === 'super administrator') {
                     <h2>Daftar Barang Aktif</h2>
                     <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
                 </div>
-
                 <div class="card-body">
                     <div class="table-responsive">
                         <table id="tableBarang">
@@ -84,19 +77,13 @@ if ($user_role === 'super administrator') {
                                 </tr>
                             </thead>
                             <tbody id="tableBodyBarang">
-                                <tr>
-                                    <td colspan="7" style="text-align: center;">Loading...</td>
-                                </tr>
+                                <tr><td colspan="7" style="text-align: center;">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-
-
-        <footer>
-            </footer>
     </div>
 
     <div id="modalRiwayat" class="modal">
@@ -110,18 +97,15 @@ if ($user_role === 'super administrator') {
                     <table id="tableKartuStok">
                         <thead>
                             <tr>
-                                <th>Tanggal</th>
+                                <th>Ref. ID</th> <th>Tanggal</th>
                                 <th>Jenis Transaksi</th>
-                                <th>Ref. ID</th>
                                 <th>Masuk (IN)</th>
                                 <th>Keluar (OUT)</th>
                                 <th>Stok Akhir</th>
                             </tr>
                         </thead>
                         <tbody id="tableBodyKartuStok">
-                            <tr>
-                                <td colspan="6" style="text-align: center;">Memuat riwayat...</td>
-                            </tr>
+                            <tr><td colspan="6" style="text-align: center;">Memuat riwayat...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -143,35 +127,23 @@ if ($user_role === 'super administrator') {
         async function loadBarang() {
             try {
                 const response = await fetch(API_BARANG_URL);
-                if (response.status === 401) {
-                    alert('Sesi Anda telah berakhir. Silakan login kembali.');
-                    window.location.href = 'login.php';
-                    return;
-                }
                 const result = await response.json();
                 const tbody = document.getElementById('tableBodyBarang');
-
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => `
-<tr>
-    <td>${item.idbarang}</td>
-    <td>${item.nama}</td>
-    <td>${item.jenis === 'J' ? 'Barang Jadi' : 'Bahan Baku'}</td>
-    <td>${item.satuan}</td>
-    <td>Rp ${formatRupiah(item.harga)}</td>
-    <td>${formatRupiah(item.stok_terakhir)}</td>
-    <td class="action-buttons">
-        <button class="btn btn-secondary btn-sm" onclick="showStockCard('${item.idbarang}', '${item.nama}')">Riwayat</button>
-    </td>
-</tr>
-`).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Tidak ada data barang aktif</td></tr>';
+                        <tr>
+                            <td>${item.idbarang}</td>
+                            <td>${item.nama}</td>
+                            <td>${item.jenis === 'J' ? 'Barang Jadi' : 'Bahan Baku'}</td>
+                            <td>${item.satuan}</td>
+                            <td>Rp ${formatRupiah(item.harga)}</td>
+                            <td>${formatRupiah(item.stok_terakhir)}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-secondary btn-sm" onclick="showStockCard('${item.idbarang}', '${item.nama}')">Riwayat</button>
+                            </td>
+                        </tr>`).join('');
                 }
-            } catch (error) {
-                console.error('Error loading barang:', error);
-                document.getElementById('tableBodyBarang').innerHTML = '<tr><td colspan="7" style="text-align: center;">Gagal memuat data barang</td></tr>';
-            }
+            } catch (error) { console.error(error); }
         }
 
         async function showStockCard(idbarang, namaBarang) {
@@ -186,35 +158,21 @@ if ($user_role === 'super administrator') {
 
                 if (result.success && result.data.length > 0) {
                     tbody.innerHTML = result.data.map(item => `
-<tr>
-    <td>${new Date(item.created_at).toLocaleString('id-ID')}</td>
-    <td>${item.jenis_transaksi_display}</td>
-    <td>${item.idtransaksi}</td>
-    <td class="${item.masuk > 0 ? 'text-success' : ''}">${formatRupiah(item.masuk)}</td>
-    <td class="${item.keluar > 0 ? 'text-danger' : ''}">${formatRupiah(item.keluar)}</td>
-    <td>${formatRupiah(item.stok)}</td>
-</tr>
-`).join('');
+                        <tr>
+                            <td><strong>#${item.idtransaksi}</strong></td> <td>${new Date(item.created_at).toLocaleString('id-ID')}</td>
+                            <td>${item.jenis_transaksi_display}</td>
+                            <td class="${item.masuk > 0 ? 'text-success' : ''}">${formatRupiah(item.masuk)}</td>
+                            <td class="${item.keluar > 0 ? 'text-danger' : ''}">${formatRupiah(item.keluar)}</td>
+                            <td><strong>${formatRupiah(item.stok)}</strong></td>
+                        </tr>`).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada riwayat transaksi untuk barang ini.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada riwayat.</td></tr>';
                 }
-            } catch (error) {
-                console.error('Error loading stock card:', error);
-                document.getElementById('tableBodyKartuStok').innerHTML = '<tr><td colspan="6" style="text-align: center;">Gagal memuat riwayat kartu stok.</td></tr>';
-            }
+            } catch (error) { console.error(error); }
         }
 
-        function closeModalRiwayat() {
-            document.getElementById('modalRiwayat').classList.remove('show');
-        }
-
-        window.onclick = function(event) {
-            if (event.target === document.getElementById('modalRiwayat')) {
-                closeModalRiwayat();
-            }
-        }
+        function closeModalRiwayat() { document.getElementById('modalRiwayat').classList.remove('show'); }
+        window.onclick = function(event) { if (event.target === document.getElementById('modalRiwayat')) closeModalRiwayat(); }
     </script>
-    <?php include 'footer.php'; ?>
 </body>
-
 </html>

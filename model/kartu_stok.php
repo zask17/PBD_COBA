@@ -1,5 +1,5 @@
 <?php
-// FILE: ../model/kartu_stok.php (API untuk Kartu Stok)
+// FILE: ../model/kartu_stok.php (API untuk Kartu Stok - VERSI TERBARU DI ATAS)
 
 require_once 'koneksi.php';
 require_once 'auth.php';
@@ -16,10 +16,9 @@ if (!$idbarang) {
     exit;
 }
 
-// Logika untuk menampilkan nama jenis transaksi
 function getDisplayJenisTransaksi($jenis) {
     switch ($jenis) {
-        case 'I': return 'Stok Awal (Initial)'; // Tambahkan Initial Stock
+        case 'I': return 'Stok Awal (Initial)';
         case 'M': return 'Masuk (Penerimaan)';
         case 'K': return 'Keluar (Penjualan)';
         case 'B': return 'Batal Jual (Reversal)';
@@ -29,16 +28,12 @@ function getDisplayJenisTransaksi($jenis) {
     }
 }
 
-
 try {
-    // Mengambil riwayat kartu stok untuk idbarang tertentu
-    // Diurutkan berdasarkan waktu pembuatan dan ID untuk mendapatkan aliran stok yang benar
+    // PERUBAHAN: ORDER BY diubah menjadi DESC agar data terbaru muncul paling atas
     $stmt = $dbconn->prepare("SELECT idtransaksi, jenis_transaksi, masuk, keluar, stok, created_at 
                             FROM kartu_stok 
                             WHERE idbarang = ?
-                            -- Menambahkan filter soft delete (jika ada)
-                            -- WHERE idbarang = ? AND deleted_at IS NULL 
-                            ORDER BY created_at ASC, idkartu_stok ASC");
+                            ORDER BY created_at DESC, idkartu_stok DESC");
     $stmt->bind_param("i", $idbarang);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -55,5 +50,4 @@ try {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Error database: ' . $e->getMessage()]);
 }
-
 ?>
