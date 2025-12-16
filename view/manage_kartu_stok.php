@@ -1,5 +1,4 @@
 <?php
-// FILE: ../view/manage_kartu_stok.php (REF ID DI PALING KIRI)
 
 require_once '../model/koneksi.php';
 require_once '../model/auth.php';

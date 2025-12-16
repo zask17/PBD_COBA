@@ -1,6 +1,4 @@
 <?php
-// FILE: ../model/kartu_stok.php (API untuk Kartu Stok - VERSI TERBARU DI ATAS)
-
 require_once 'koneksi.php';
 require_once 'auth.php';
 
