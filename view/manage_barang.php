@@ -86,10 +86,10 @@ $jenis_barang_options = [
                     <h3>Total Stok</h3>
                     <div class="value" id="totalStok">0</div>
                 </div>
-                <div class="stat-card">
+                <!-- <div class="stat-card">
                     <h3>Nilai Inventory (Harga Pokok)</h3>
                     <div class="value" id="totalNilai">Rp 0</div>
-                </div>
+                </div> -->
             </div>
 
             <div class="card">

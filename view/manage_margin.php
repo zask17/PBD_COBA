@@ -14,8 +14,6 @@ if ($user_role === 'super administrator') {
 } else if ($user_role === 'administrator') {
     $dashboard_url = 'dashboard_admin.php';
 }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -27,6 +25,14 @@ if ($user_role === 'super administrator') {
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard_super_admin.css">
     <link rel="stylesheet" href="../css/margin.css">
+    <style>
+        /* CSS Tambahan untuk indikator filter aktif */
+        .btn-filter-group .active {
+            box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5); 
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard-content">
@@ -62,8 +68,10 @@ if ($user_role === 'super administrator') {
             <div class="card">
                 <div class="card-header">
                     <h2>Daftar Margin Penjualan</h2>
-                    <button id="btnFilterAktif" class="btn btn-success btn-sm" data-filter="aktif">Margin Aktif</button>
-                    <button id="btnFilterSemua" class="btn btn-info btn-sm active" data-filter="semua">Semua Margin</button>
+                    <div class="btn-filter-group">
+                        <button id="btnFilterAktif" class="btn btn-success btn-sm" data-filter="aktif">Margin Aktif</button>
+                        <button id="btnFilterSemua" class="btn btn-info btn-sm" data-filter="semua">Semua Margin</button>
+                    </div>
                     <button id="btnRefresh" class="btn btn-secondary btn-sm">Refresh</button>
                     <button id="btnTambah" class="btn btn-primary"><span>+</span> Tambah Margin</button>
                 </div>
@@ -126,9 +134,11 @@ if ($user_role === 'super administrator') {
 
     <script>
         const API_URL = '../model/margin.php'; 
+        let currentFilter = 'aktif'; // Default filter variabel
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadMargin();
+            // Memanggil filter aktif saat pertama kali masuk
+            loadMargin(currentFilter);
         });
 
         function closeModal() {
@@ -136,10 +146,21 @@ if ($user_role === 'super administrator') {
             document.getElementById('formMargin').reset();
         }
 
-        async function loadMargin(filter = 'semua') {
+        async function loadMargin(filter = 'aktif') {
+            currentFilter = filter;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading...</td></tr>';
             
+            // Mengatur UI Button Active
+            document.getElementById('btnFilterAktif').classList.remove('active');
+            document.getElementById('btnFilterSemua').classList.remove('active');
+            
+            if(filter === 'aktif') {
+                document.getElementById('btnFilterAktif').classList.add('active');
+            } else {
+                document.getElementById('btnFilterSemua').classList.add('active');
+            }
+
             try {
                 const response = await fetch(`${API_URL}?filter=${filter}`);
                 const result = await response.json();
@@ -162,7 +183,7 @@ if ($user_role === 'super administrator') {
                         </tr>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Tidak ada data margin</td></tr>';
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Tidak ada data margin (${filter}).</td></tr>`;
                 }
             } catch (error) {
                 console.error('Error loading margin:', error);
@@ -189,7 +210,7 @@ if ($user_role === 'super administrator') {
                     document.getElementById('idmargin_penjualan').value = data.idmargin_penjualan;
                     document.getElementById('formMethod').value = 'PUT';
                     document.getElementById('persen').value = data.persen;
-                    document.getElementById('status').value = data.status; // 'aktif'/'tidak_aktif'
+                    document.getElementById('status').value = data.status; 
                     document.getElementById('modalForm').classList.add('show');
                 } else {
                     alert('Margin tidak ditemukan: ' + result.message);
@@ -200,7 +221,7 @@ if ($user_role === 'super administrator') {
         }
 
         function aktifkanMargin(id) {
-            editMargin(id); // Buka modal edit, user bisa set status=aktif
+            editMargin(id); 
         }
 
         async function deleteMargin(id, persen) {
@@ -214,7 +235,7 @@ if ($user_role === 'super administrator') {
                 const response = await fetch(API_URL, { method: 'POST', body: formData });
                 const result = await response.json();
                 alert(result.message);
-                if (result.success) loadMargin();
+                if (result.success) loadMargin(currentFilter);
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -229,14 +250,14 @@ if ($user_role === 'super administrator') {
                 alert(result.message);
                 if (result.success) {
                     closeModal();
-                    loadMargin();
+                    loadMargin(currentFilter);
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         });
 
-        document.getElementById('btnRefresh').addEventListener('click', loadMargin);
+        document.getElementById('btnRefresh').addEventListener('click', () => loadMargin(currentFilter));
         document.getElementById('btnFilterAktif').addEventListener('click', () => loadMargin('aktif'));
         document.getElementById('btnFilterSemua').addEventListener('click', () => loadMargin('semua'));
 
@@ -246,6 +267,5 @@ if ($user_role === 'super administrator') {
             }
         }
     </script>
-    <?php include 'footer.php'; ?>
 </body>
 </html>
