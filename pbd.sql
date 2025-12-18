@@ -683,9 +683,10 @@ BEGIN
    VALUES (p_idbarang, 'K', p_idpenjualan, p_jumlah_keluar, 0, stok_sekarang, NOW());
 END $$
 DELIMITER ;
--- 
--- 
--- 
+
+
+
+
 -- 6. SP BATAL PENJUALAN
 drop procedure sp_proses_pembatalan_penjualan;
 -- drop karena dalam transaksi tidak pakai batal
