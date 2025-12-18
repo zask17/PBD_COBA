@@ -5,7 +5,7 @@ require_once 'auth.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $method = $_SERVER['REQUEST_METHOD'];
-$iduser = $_SESSION['iduser'] ?? 1; // sesuaikan dengan session login kamu
+$iduser = $_SESSION['iduser'] ?? 1;
 
 switch ($method) {
     case 'GET':  handleGet($dbconn); break;
@@ -61,7 +61,7 @@ function handleGet($dbconn) {
             $res = $dbconn->query($sql);
             $barangs = $res->fetch_all(MYSQLI_ASSOC);
 
-            // Filter Stok di PHP (Hanya menampilkan yang ada stoknya)
+            // Filter yang menampilkan yang ada stoknya
             $filtered = array_filter($barangs, function($b) use ($statusFilter) {
                 return $b['stok'] > 0;
             });

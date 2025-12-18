@@ -3,7 +3,7 @@ require_once 'koneksi.php';
 require_once 'auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
-checkAuth(true); // Melindungi API, hanya user login
+checkAuth(true);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -40,10 +40,10 @@ function handleGet($dbconn)
 {
     $id = $_GET['id'] ?? null;
     $id_int = intval($id);
-    $filter = $_GET['filter'] ?? 'semua'; // 'aktif' atau 'semua'
+    $filter = $_GET['filter'] ?? 'semua';
 
     if ($id_int > 0) {
-        // Ambil satu data untuk edit (dari tabel dasar)
+        // Gunakan tabel dasar untuk edit
         $stmt = $dbconn->prepare("SELECT idmargin_penjualan, persen, status FROM margin_penjualan WHERE idmargin_penjualan = ?");
         if (!$stmt) {
             http_response_code(500);
@@ -89,7 +89,7 @@ function handlePost($dbconn)
     $persen = $_POST['persen'] ?? null;
     $status_text = $_POST['status'] ?? 'tidak_aktif';
     $status = ($status_text === 'aktif') ? 1 : 0;
-    $iduser = $_SESSION['iduser'] ?? 0; // Ambil dari session (asumsi auth.php set ini)
+    $iduser = $_SESSION['iduser'] ?? 0;
 
     if (!is_numeric($persen) || $persen <= 0 || $iduser === 0) {
         http_response_code(400);

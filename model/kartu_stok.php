@@ -27,7 +27,7 @@ function getDisplayJenisTransaksi($jenis) {
 }
 
 try {
-    // PERUBAHAN: ORDER BY diubah menjadi DESC agar data terbaru muncul paling atas
+    // ORDER BY menggunakan DESC agar data terbaru muncul paling atas
     $stmt = $dbconn->prepare("SELECT idtransaksi, jenis_transaksi, masuk, keluar, stok, created_at 
                             FROM kartu_stok 
                             WHERE idbarang = ?

@@ -2,10 +2,8 @@
 require_once 'koneksi.php'; 
 require_once 'auth.php'; 
 
-// Set header untuk output JSON
 header('Content-Type: application/json; charset=utf-8');
 
-// Pastikan user sudah login
 checkAuth(true); 
 
 $method = $_SERVER['REQUEST_METHOD'];

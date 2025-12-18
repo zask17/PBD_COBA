@@ -46,13 +46,11 @@ function handleGet($dbconn) {
 
     if ($action === 'get_roles') {
         // --- Ambil daftar role untuk dropdown ---
-        // Menggunakan tabel role langsung
         $result = $dbconn->query("SELECT idrole, nama_role FROM role ORDER BY nama_role ASC");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['success' => true, 'data' => $data]);
     } elseif ($id) {
         // --- Ambil satu user untuk form edit (tanpa password) ---
-        // Harus menggunakan tabel user untuk mendapatkan idrole dan username
         $stmt = $dbconn->prepare("SELECT iduser, username, idrole FROM user WHERE iduser = ?");
         $stmt->bind_param("i", $id_int);
         $stmt->execute();
@@ -66,7 +64,6 @@ function handleGet($dbconn) {
         }
     } else {
         // --- Ambil semua user dengan nama role-nya menggunakan VIEW V_USER_ROLE ---
-        // Kolom di view: iduser, NAMA, ROLE
         $sql = "SELECT iduser, 
                        NAMA AS username, 
                        ROLE AS nama_role 
@@ -100,7 +97,6 @@ function handlePost($dbconn) {
     }
 
     // Menggunakan password_hash() untuk keamanan, atau langsung $password jika PBD menggunakan plain text
-    // Asumsi: Kita gunakan password_hash() karena lebih aman.
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
     $idrole_int = intval($idrole);
 

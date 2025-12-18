@@ -37,7 +37,7 @@ function handleGet($dbconn) {
     $id = $_GET['id'] ?? null;
 
     if ($id) {
-        // Ambil satu data role untuk form edit (Tetap dari tabel master untuk akurasi ID)
+        // Ambil satu data role untuk form edit
         $stmt = $dbconn->prepare("SELECT idrole, nama_role FROM role WHERE idrole = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();

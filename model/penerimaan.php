@@ -4,10 +4,10 @@ require_once 'koneksi.php';
 require_once 'auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
-checkAuth(true); // Memastikan hanya user terautentikasi yang bisa mengakses API ini
+checkAuth(true);
 
 $method = $_SERVER['REQUEST_METHOD'];
-// Menggunakan global $dbconn dari koneksi.php
+
 global $dbconn;
 
 // Handler untuk GET dengan parameter khusus
@@ -104,7 +104,6 @@ function handleGet($dbconn) {
     // 1. GET OPEN PO - Ambil PO yang statusnya masih P (Dipesan) atau S (Sebagian)
     if ($action === 'get_open_pos') {
         try {
-            // Query langsung dari tabel pengadaan tanpa VIEW
             $sql = "SELECT 
                         p.idpengadaan, 
                         p.timestamp,
@@ -126,7 +125,6 @@ function handleGet($dbconn) {
             
             $pengadaan_rows = $result->fetch_all(MYSQLI_ASSOC);
             
-            // Emulasi VIEW V_PENGADAAN untuk setiap row
             $data = [];
             foreach ($pengadaan_rows as $row) {
                 $data[] = buildVPengadaanRow($dbconn, $row);
@@ -152,8 +150,6 @@ function handleGet($dbconn) {
     if ($action === 'get_po_details' && isset($_GET['id'])) {
         try {
             $idpengadaan = (int)$_GET['id'];
-            
-            // Query untuk mendapatkan jumlah dipesan, harga satuan, dan total yang sudah diterima
             $sql = "SELECT 
                         dp.idbarang,
                         b.nama as nama_barang,
@@ -180,7 +176,7 @@ function handleGet($dbconn) {
             
             $data = [];
             while ($row = $result->fetch_assoc()) {
-                // Filter di PHP, hanya ambil item yang masih ada SISA DITERIMA
+                // Filter yang hanya ambil item yang masih ada SISA DITERIMA
                 $sisa = $row['jumlah_dipesan'] - $row['total_diterima']; 
                 if ($sisa > 0) {
                     $data[] = $row;
@@ -457,7 +453,6 @@ function handleUpdate($dbconn, $data) {
         $stmt_get_po_before_update->close();
 
         // 1. Hapus kartu stok yang terkait (untuk reset stok)
-        // FIX: Menggunakan kolom DDL yang benar: idtransaksi
         $sql_delete_stok = "DELETE FROM kartu_stok 
                             WHERE jenis_transaksi = 'M' AND idtransaksi = ?";
         

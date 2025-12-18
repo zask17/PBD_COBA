@@ -1,10 +1,8 @@
 <?php
-// FILE: model/barang.php (Sudah diperbaiki)
-
 require_once 'koneksi.php';
 require_once 'auth.php';
 
-// Set header untuk output JSON
+
 header('Content-Type: application/json; charset=utf-8');
 
 // Memastikan otentikasi
@@ -76,7 +74,7 @@ function handleGet($dbconn) {
         // --- Ambil Detail Barang (Single Item) ---
         $id_int = intval($id);
         
-        // Menggunakan subkueri skalar untuk mendapatkan stok terakhir
+        // Mendapatkan stok terakhir
         $sql = "SELECT 
                     b.idbarang, b.jenis, b.nama, b.idsatuan, b.status, b.harga,
                     (SELECT k.stok FROM kartu_stok k 
@@ -126,15 +124,13 @@ function handleGet($dbconn) {
         echo json_encode(['success' => true, 'data' => $data]);
 
     } elseif ($action === 'get_satuan') {
-        // --- Ambil Daftar Satuan dari V_SATUAN_AKTIF ---
+        // --- Ambil Daftar Satuan V_SATUAN_AKTIF ---
         $result = $dbconn->query("SELECT idsatuan, SATUAN AS nama_satuan FROM V_SATUAN_AKTIF ORDER BY SATUAN");
         $data = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode(['success' => true, 'data' => $data]);
 
     } elseif ($action === 'get_stock_card' && isset($_GET['idbarang'])) {
         // --- Ambil Histori Stok (Kartu Stok) ---
-        // Peringatan: Logika ini *seharusnya* berada di kartu_stok.php
-        // Namun, jika Anda bersikeras menggabungkannya:
         try {
             $idbarang = intval($_GET['idbarang']);
             $stmt = $dbconn->prepare(
@@ -157,7 +153,7 @@ function handleGet($dbconn) {
         // --- Ambil Semua Barang untuk Tabel Utama ---
         $filter = $_GET['filter'] ?? 'aktif';
         
-        // Query disederhanakan menggunakan JOIN ke V_BARANG_SEMUA
+        // Menggunakan JOIN ke V_BARANG_SEMUA
         $sql = "SELECT 
                     vbs.`KODE BARANG` AS idbarang, 
                     vbs.`NAMA BARANG` AS nama_barang, 
@@ -210,7 +206,7 @@ function handleGet($dbconn) {
     }
 }
 
-// --- FUNGSI KHUSUS KARTU STOK (DIPISAHKAN DARI HANDLEGET AGAR LEBIH JELAS) ---
+// --- FUNGSI KHUSUS KARTU STOK ---
 function handleGetActiveStock($dbconn) {
     try {
         // Menggunakan V_BARANG_AKTIF untuk mendapatkan barang aktif
@@ -245,9 +241,6 @@ function handleGetActiveStock($dbconn) {
             unset($row['jenis_text']); 
             $data[] = $row;
         }
-
-
-        
 
         echo json_encode(['success' => true, 'data' => $data]);
     } catch (Exception $e) {

@@ -7,7 +7,7 @@ require_once 'koneksi.php';
 require_once 'auth.php';
 
 header('Content-Type: application/json');
-checkAuth(true); // Protect the API endpoint
+checkAuth(true);
 
 // --- Main Logic ---
 $method = $_SERVER['REQUEST_METHOD'];
@@ -52,12 +52,10 @@ function getMasterData() {
     global $dbconn;
     try {
         // 1. Ambil Vendor Aktif menggunakan VIEW V_VENDOR_AKTIF
-        // Berdasarkan DDL, VIEW ini memuat idvendor, vendor (nama), dan 'BADAN HUKUM'
         $vendor_result = $dbconn->query("SELECT idvendor, vendor AS nama_vendor FROM V_VENDOR_AKTIF");
         $vendors = $vendor_result->fetch_all(MYSQLI_ASSOC);
 
         // 2. Ambil Barang Aktif menggunakan VIEW V_BARANG_AKTIF
-        // VIEW ini memuat 'KODE BARANG' (idbarang), 'NAMA BARANG', 'HARGA POKOK', dll
         $barang_sql = "SELECT 
                             `KODE BARANG` AS idbarang, 
                             `NAMA BARANG` AS nama, 

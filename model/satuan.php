@@ -2,11 +2,11 @@
 require_once 'koneksi.php';
 require_once 'auth.php';
 
-// Pastikan Content-Type adalah JSON
+
 header('Content-Type: application/json; charset=utf-8');
 
-// Memeriksa otentikasi
-checkAuth(true); // Melindungi API, hanya untuk user yang sudah login
+
+checkAuth(true);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -55,7 +55,6 @@ function handleGet($dbconn)
 
     if ($id) {
         // --- Ambil satu data satuan (untuk form edit) ---
-        // Digunakan untuk mengisi data saat tombol 'Edit' diklik.
         $stmt = $dbconn->prepare("SELECT idsatuan, nama_satuan, status FROM satuan WHERE idsatuan = ?");
         
         if (!$stmt) {
@@ -88,7 +87,7 @@ function handleGet($dbconn)
                     FROM V_SATUAN_AKTIF 
                     ORDER BY idsatuan ASC";
         } else {
-            // Default, menggunakan V_SATUAN_SEMUA: berisi idsatuan, SATUAN, dan STATUS SATUAN
+            // Menggunakan V_SATUAN_SEMUA: berisi idsatuan, SATUAN, dan STATUS SATUAN
             $sql = "SELECT idsatuan, 
                            SATUAN AS nama_satuan, 
                            `STATUS SATUAN` AS status_text 
