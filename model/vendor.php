@@ -42,12 +42,15 @@ if (isset($dbconn) && $dbconn instanceof mysqli) {
 /**
  * Fungsi untuk menangani permintaan GET (Ambil data)
  */
+/**
+ * Fungsi untuk menangani permintaan GET (Ambil data)
+ */
 function handleGet($dbconn) {
     $action = $_GET['action'] ?? null;
     $id = $_GET['id'] ?? null;
 
     if ($id) {
-        // 1. Ambil satu vendor untuk form edit (menggunakan tabel dasar untuk data mentah)
+        // 1. Ambil satu vendor untuk form edit (menggunakan tabel dasar)
         $stmt = $dbconn->prepare("SELECT idvendor, nama_vendor, badan_hukum, status FROM vendor WHERE idvendor = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -73,29 +76,25 @@ function handleGet($dbconn) {
             echo json_encode(['success' => true, 'data' => $stats]);
         } else {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Gagal mengambil statistik vendor: ' . $dbconn->error]);
+            echo json_encode(['success' => false, 'message' => 'Gagal mengambil statistik: ' . $dbconn->error]);
         }
 
     } else {
-        // 3. Ambil daftar semua vendor (atau yang difilter) menggunakan View
-        
-        $filter = $_GET['filter'] ?? 'semua'; // Filter default
-        
-        $sql = "";
+        // 3. Ambil daftar vendor menggunakan View
+        $filter = $_GET['filter'] ?? 'semua';
         
         if ($filter === 'aktif') {
-            // Menggunakan V_VENDOR_SEMUA dan memfilter hasilnya di PHP (karena V_VENDOR_AKTIF asli hanya mengembalikan 3 kolom)
+            // MENGGUNAKAN V_VENDOR_AKTIF
             $sql = "SELECT 
                         idvendor, 
                         VENDOR AS nama_vendor, 
                         `BADAN HUKUM` AS jenis_badan_hukum,
-                        'Aktif' AS status_aktif
-                    FROM V_VENDOR_SEMUA 
-                    WHERE STATUS = 'Aktif' 
+                        STATUS AS status_aktif
+                    FROM V_VENDOR_AKTIF 
                     ORDER BY idvendor ASC";
             
-        } else { // 'semua'
-            // Menggunakan V_VENDOR_SEMUA
+        } else { 
+            // MENGGUNAKAN V_VENDOR_SEMUA
             $sql = "SELECT 
                         idvendor, 
                         VENDOR AS nama_vendor, 
@@ -109,11 +108,10 @@ function handleGet($dbconn) {
 
         if ($result) {
             $data_formatted = $result->fetch_all(MYSQLI_ASSOC);
-
             echo json_encode(['success' => true, 'data' => $data_formatted]);
         } else {
-            http_response_code(500); // Internal Server Error
-            echo json_encode(['success' => false, 'message' => 'Gagal mengambil data vendor: ' . $dbconn->error . '. Pastikan V_VENDOR_SEMUA ada.']);
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Gagal mengambil data vendor: ' . $dbconn->error]);
         }
     }
 }

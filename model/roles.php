@@ -1,5 +1,4 @@
 <?php
-// model/roles.php (API untuk Manajemen Role)
 
 require_once 'koneksi.php';
 require_once 'auth.php';
@@ -20,7 +19,7 @@ switch ($method) {
         handleGet($dbconn);
         break;
     case 'POST':
-        handlePost($dbconn); // Menangani penambahan data baru (dengan ID manual)
+        handlePost($dbconn); 
         break;
     case 'PUT':
         handlePut($dbconn);
@@ -38,7 +37,7 @@ function handleGet($dbconn) {
     $id = $_GET['id'] ?? null;
 
     if ($id) {
-        // Ambil satu data role untuk form edit
+        // Ambil satu data role untuk form edit (Tetap dari tabel master untuk akurasi ID)
         $stmt = $dbconn->prepare("SELECT idrole, nama_role FROM role WHERE idrole = ?");
         $stmt->bind_param("i", $id);
         $stmt->execute();
@@ -52,8 +51,15 @@ function handleGet($dbconn) {
         }
        
     } else {
-        // Ambil semua data role untuk tabel
+        // --- MENGGUNAKAN TABEL VIEW V_ROLE ---
         $result = $dbconn->query("SELECT idrole, ROLE AS nama_role FROM V_ROLE ORDER BY idrole ASC");
+        
+        if ($result === false) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Gagal mengambil data dari VIEW: ' . $dbconn->error]);
+            return;
+        }
+
         $data = [];
         while ($row = $result->fetch_assoc()) {
             $data[] = $row;
@@ -71,16 +77,11 @@ function handlePost($dbconn) {
         return;
     }
 
-    // --- LOGIKA MENCARI ID MAKSIMUM DAN GENERATE ID BARU ---
+    // Mencari ID maksimum untuk generate ID baru (karena idrole di DDL tidak AUTO_INCREMENT)
     $max_id_result = $dbconn->query("SELECT MAX(idrole) AS max_id FROM role");
     $max_id_row = $max_id_result->fetch_assoc();
-    $new_id = ($max_id_row['max_id'] ?? 0) + 1; // Jika tabel kosong, mulai dari 1
+    $new_id = ($max_id_row['max_id'] ?? 0) + 1; 
 
-    // Pastikan tidak ada duplikasi ID (walaupun jarang terjadi)
-    // Query yang lebih aman dalam kasus concurrency:
-    // INSERT INTO role (idrole, nama_role) VALUES (?, ?) ON DUPLICATE KEY UPDATE nama_role=nama_role
-    
-    // Karena kita tidak bisa menggunakan ON DUPLICATE KEY UPDATE tanpa transaction (untuk memastikan ID unik):
     try {
         $stmt = $dbconn->prepare("INSERT INTO role (idrole, nama_role) VALUES (?, ?)");
         $stmt->bind_param("is", $new_id, $nama_role);
@@ -93,24 +94,25 @@ function handlePost($dbconn) {
         }
     } catch (Exception $e) {
          http_response_code(500);
-         echo json_encode(['success' => false, 'message' => 'Error database saat mencoba menambah role: ' . $e->getMessage()]);
+         echo json_encode(['success' => false, 'message' => 'Error database: ' . $e->getMessage()]);
     }
 }
 
 function handlePut($dbconn) {
-    // Hanya mengupdate nama_role
-    $idrole = $_POST['idrole'];
-    $nama_role = $_POST['nama_role'];
+    $idrole = $_POST['idrole'] ?? null;
+    $nama_role = $_POST['nama_role'] ?? null;
+
+    if (!$idrole || !$nama_role) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Data tidak lengkap.']);
+        return;
+    }
 
     $stmt = $dbconn->prepare("UPDATE role SET nama_role = ? WHERE idrole = ?");
     $stmt->bind_param("si", $nama_role, $idrole);
 
     if ($stmt->execute()) {
-        if ($stmt->affected_rows > 0) {
-            echo json_encode(['success' => true, 'message' => 'Role berhasil diperbarui.']);
-        } else {
-            echo json_encode(['success' => true, 'message' => 'Role berhasil diperbarui, tetapi tidak ada perubahan yang terdeteksi.']); 
-        }
+        echo json_encode(['success' => true, 'message' => 'Role berhasil diperbarui.']);
     } else {
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Gagal memperbarui role: ' . $stmt->error]);
@@ -118,8 +120,14 @@ function handlePut($dbconn) {
 }
 
 function handleDelete($dbconn) {
-    $idrole = $_POST['idrole'];
+    $idrole = $_POST['idrole'] ?? null;
     
+    if (!$idrole) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'ID Role diperlukan.']);
+        return;
+    }
+
     $stmt = $dbconn->prepare("DELETE FROM role WHERE idrole = ?");
     $stmt->bind_param("i", $idrole);
     
@@ -131,13 +139,13 @@ function handleDelete($dbconn) {
             echo json_encode(['success' => false, 'message' => 'Role tidak ditemukan.']);
         }
     } else {
-        // Cek jika errornya adalah Foreign Key Constraint (code 1451)
+        // Cek error Foreign Key Constraint (code 1451)
         if ($dbconn->errno == 1451) { 
-            http_response_code(409); // Conflict
-            echo json_encode(['success' => false, 'message' => 'Gagal menghapus role: Masih ada user yang menggunakan role ini.']);
+            http_response_code(409); 
+            echo json_encode(['success' => false, 'message' => 'Gagal menghapus: Masih ada user yang menggunakan role ini.']);
         } else {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Gagal menghapus role: ' . $stmt->error]);
+            echo json_encode(['success' => false, 'message' => 'Gagal menghapus role: ' . $dbconn->error]);
         }
     }
 }

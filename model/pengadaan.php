@@ -51,25 +51,38 @@ if ($method === 'GET') {
 function getMasterData() {
     global $dbconn;
     try {
-        // Ambil Vendor Aktif
-        $vendor_result = $dbconn->query("SELECT idvendor, nama_vendor FROM vendor WHERE status = 'A'");
+        // 1. Ambil Vendor Aktif menggunakan VIEW V_VENDOR_AKTIF
+        // Berdasarkan DDL, VIEW ini memuat idvendor, vendor (nama), dan 'BADAN HUKUM'
+        $vendor_result = $dbconn->query("SELECT idvendor, vendor AS nama_vendor FROM V_VENDOR_AKTIF");
         $vendors = $vendor_result->fetch_all(MYSQLI_ASSOC);
 
-        // Ambil Barang Aktif (TANPA JOIN ke barang_vendor)
-        $barang_sql = "SELECT b.idbarang, b.nama, b.harga FROM barang b WHERE b.status = 1";
+        // 2. Ambil Barang Aktif menggunakan VIEW V_BARANG_AKTIF
+        // VIEW ini memuat 'KODE BARANG' (idbarang), 'NAMA BARANG', 'HARGA POKOK', dll
+        $barang_sql = "SELECT 
+                            `KODE BARANG` AS idbarang, 
+                            `NAMA BARANG` AS nama, 
+                            `HARGA POKOK` AS harga 
+                       FROM V_BARANG_AKTIF";
         $barang_result = $dbconn->query($barang_sql);
         $barangs = $barang_result->fetch_all(MYSQLI_ASSOC);
 
-        echo json_encode(['success' => true, 'vendors' => $vendors, 'barangs' => $barangs]);
+        // Kembalikan data dalam format JSON
+        echo json_encode([
+            'success' => true, 
+            'vendors' => $vendors, 
+            'barangs' => $barangs
+        ]);
     } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Gagal mengambil data master: ' . $e->getMessage()]);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Gagal mengambil data master: ' . $e->getMessage()
+        ]);
     }
 }
 
 // Helper function: Emulasi VIEW V_PENGADAAN di backend
 function buildVPengadaanRow($dbconn, $p) {
-    // Hitung total_dipesan menggunakan Subkueri Skalar
     $result_dipesan = $dbconn->query("
         SELECT COALESCE(SUM(dp.jumlah), 0) AS total_dipesan
         FROM detail_pengadaan dp

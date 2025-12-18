@@ -22,23 +22,22 @@ $dbconn->close();
 /* ============================================================= */
 /*                          GET HANDLER                          */
 /* ============================================================= */
+
 function handleGet($dbconn) {
     $action = $_GET['action'] ?? '';
     $id     = $_GET['id'] ?? null;
 
-    // 1. Daftar Margin Aktif (hanya 1 yang paling baru)
+    // 1. Daftar Margin Aktif (Menggunakan VIEW V_MARGIN_AKTIF)
     if ($action === 'list_margins') {
         try {
-            $res = $dbconn->query("SELECT idmargin_penjualan, persen, created_at 
-                                   FROM margin_penjualan 
-                                   WHERE status = 1");
-            $margins = $res->fetch_all(MYSQLI_ASSOC);
-
-            // ORDER BY created_at DESC di PHP
-            usort($margins, fn($a,$b) => strtotime($b['created_at']) - strtotime($a['created_at']));
-            $latest = !empty($margins) ? [$margins[0]] : [];
-
-            echo json_encode(['success' => true, 'data' => $latest]);
+            // VIEW V_MARGIN_AKTIF sudah memfilter status = 1
+            $res = $dbconn->query("SELECT idmargin_penjualan, persen, DIBUAT AS created_at 
+                                   FROM V_MARGIN_AKTIF 
+                                   ORDER BY idmargin_penjualan DESC LIMIT 1");
+            $margin = $res->fetch_assoc();
+            
+            $data = $margin ? [$margin] : [];
+            echo json_encode(['success' => true, 'data' => $data]);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -46,39 +45,28 @@ function handleGet($dbconn) {
         return;
     }
 
-    // 2. Daftar Barang (dengan stok terbaru dihitung di PHP)
+    // 2. Daftar Barang (Menggunakan VIEW V_BARANG_AKTIF + Function stok_terakhir)
     if ($action === 'list_barang') {
         $statusFilter = $_GET['status'] ?? 'aktif';
         try {
-            // Ambil semua barang
-            $sql = "SELECT b.idbarang, b.nama, b.harga, b.status 
-                    FROM barang b 
-                    JOIN satuan s ON b.idsatuan = s.idsatuan";
+            // Menggunakan VIEW V_BARANG_AKTIF untuk memastikan hanya barang status 1
+            // Menggunakan Function stok_terakhir() yang sudah ada di DDL Anda
+            $sql = "SELECT 
+                        `KODE BARANG` AS idbarang, 
+                        `NAMA BARANG` AS nama, 
+                        `HARGA POKOK` AS harga,
+                        stok_terakhir(`KODE BARANG`) AS stok
+                    FROM V_BARANG_AKTIF";
+            
             $res = $dbconn->query($sql);
             $barangs = $res->fetch_all(MYSQLI_ASSOC);
 
-            // Hitung stok terbaru untuk setiap barang (di PHP)
-            foreach ($barangs as &$b) {
-                $stokRes = $dbconn->query("SELECT stok, created_at, idkartu_stok 
-                                          FROM kartu_stok 
-                                          WHERE idbarang = {$b['idbarang']} 
-                                          ORDER BY created_at DESC, idkartu_stok DESC 
-                                          LIMIT 1");
-                $row = $stokRes->fetch_assoc();
-                $b['stok'] = $row['stok'] ?? 0;
-            }
-            unset($b);
-
-            // Filter sesuai permintaan
+            // Filter Stok di PHP (Hanya menampilkan yang ada stoknya)
             $filtered = array_filter($barangs, function($b) use ($statusFilter) {
-                $aktif = $b['status'] == 1;
-                $adaStok = $b['stok'] > 0;
-                if ($statusFilter === 'aktif') return $aktif && $adaStok;
-                if ($statusFilter === 'semua') return $adaStok;
-                return false;
+                return $b['stok'] > 0;
             });
 
-            // Urutkan berdasarkan ID barang (di PHP)
+            // Urutkan berdasarkan ID barang
             usort($filtered, fn($a,$b) => $a['idbarang'] - $b['idbarang']);
 
             echo json_encode(['success' => true, 'data' => array_values($filtered)]);
@@ -89,19 +77,19 @@ function handleGet($dbconn) {
         return;
     }
 
-    // 3. Daftar Penjualan (diurutkan di PHP)
+    // 3. Daftar Penjualan (Menggunakan VIEW V_MARGIN_SEMUA untuk info margin)
     if ($action === 'list_penjualan') {
         try {
+            // JOIN penjualan dengan user dan VIEW V_MARGIN_SEMUA
             $sql = "SELECT p.idpenjualan, p.created_at, u.username, 
-                           mp.persen AS margin_persen, p.total_nilai
+                           vm.PERSEN_MARGIN AS margin_persen, p.total_nilai
                     FROM penjualan p
                     JOIN user u ON p.iduser = u.iduser
-                    JOIN margin_penjualan mp ON p.idmargin_penjualan = mp.idmargin_penjualan";
+                    JOIN V_MARGIN_SEMUA vm ON p.idmargin_penjualan = vm.idmargin_penjualan
+                    ORDER BY p.idpenjualan DESC";
+            
             $res = $dbconn->query($sql);
             $list = $res->fetch_all(MYSQLI_ASSOC);
-
-            // Urutkan DESC idpenjualan di PHP
-            usort($list, fn($a,$b) => $b['idpenjualan'] - $a['idpenjualan']);
 
             echo json_encode(['success' => true, 'data' => $list]);
         } catch (Exception $e) {
@@ -111,17 +99,16 @@ function handleGet($dbconn) {
         return;
     }
 
-    // 4. Detail Penjualan
+    // 4. Detail Penjualan (Menggunakan VIEW V_BARANG_SEMUA untuk info barang & satuan)
     if ($action === 'detail_penjualan' && $id) {
-        // (kode detail tetap sama seperti sebelumnya, sudah aman)
-        // ... (saya sisipkan kode lengkap di bawah agar 100% copy-paste)
         try {
+            // Header Penjualan
             $stmt = $dbconn->prepare("SELECT p.idpenjualan, p.created_at, p.subtotal_nilai, 
                                              p.ppn, p.total_nilai, u.username AS kasir, 
-                                             mp.persen AS margin_persen
+                                             vm.PERSEN_MARGIN AS margin_persen
                                       FROM penjualan p
                                       JOIN user u ON p.iduser = u.iduser
-                                      JOIN margin_penjualan mp ON p.idmargin_penjualan = mp.idmargin_penjualan
+                                      JOIN V_MARGIN_SEMUA vm ON p.idmargin_penjualan = vm.idmargin_penjualan
                                       WHERE p.idpenjualan = ?");
             $stmt->bind_param("i", $id);
             $stmt->execute();
@@ -133,12 +120,12 @@ function handleGet($dbconn) {
                 return;
             }
 
+            // Item Detail menggunakan VIEW V_BARANG_SEMUA
             $stmt2 = $dbconn->prepare("SELECT dp.jumlah, dp.harga_satuan, dp.subtotal,
-                                              b.nama AS nama_barang, s.nama_satuan AS satuan
-                                       FROM detail_penjualan dp
-                                       JOIN barang b ON dp.idbarang = b.idbarang
-                                       JOIN satuan s ON b.idsatuan = s.idsatuan
-                                       WHERE dp.penjualan_idpenjualan = ?");
+                                               vb.`NAMA BARANG` AS nama_barang, vb.SATUAN AS satuan
+                                        FROM detail_penjualan dp
+                                        JOIN V_BARANG_SEMUA vb ON dp.idbarang = vb.`KODE BARANG`
+                                        WHERE dp.penjualan_idpenjualan = ?");
             $stmt2->bind_param("i", $id);
             $stmt2->execute();
             $items = $stmt2->get_result()->fetch_all(MYSQLI_ASSOC);
